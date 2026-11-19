@@ -24,6 +24,7 @@ public final class GPUSampler {
             var snapshot = GPUSnapshot()
             snapshot.name = Self.fallbackName
             snapshot.vendor = Self.fallbackVendor
+            snapshot.isIntegrated = Self.isIntegrated(vendor: Self.fallbackVendor)
             return [snapshot]
         }
         return devices.sorted {
@@ -62,6 +63,7 @@ public final class GPUSampler {
             snapshot.id = identity.id
             snapshot.name = identity.name
             snapshot.vendor = identity.vendor
+            snapshot.isIntegrated = Self.isIntegrated(vendor: identity.vendor)
 
             snapshot.utilization = number(statistics["Device Utilization %"])
                 ?? number(statistics["GPU Activity(%)"])
@@ -85,6 +87,17 @@ public final class GPUSampler {
                 snapshot.memoryUtilization = used / (used + cached + free) * 100
             }
 
+            if snapshot.isIntegrated {
+                // 核显没有独立 VRAM，但会从系统内存映射共享区域。inUseSysMemoryBytes
+                // 偶尔下溢成天文数字（睡眠唤醒后见过），超出 GART 容量时丢弃，
+                // 退回到始终自洽的 GART 已用量。
+                let limit = number(statistics["gartSizeBytes"]) ?? 1e12
+                let inUse = number(statistics["inUseSysMemoryBytes"]).flatMap {
+                    $0 >= 0 && $0 <= limit ? $0 : nil
+                }
+                snapshot.sharedMemoryBytes = inUse ?? number(statistics["gartUsedBytes"])
+            }
+
             snapshot.isSupported = true
             result.append(snapshot)
         }
@@ -95,11 +108,20 @@ public final class GPUSampler {
     /// ties, so an enabled iGPU never displaces the card that is actually
     /// driving the display.
     private static func priority(_ gpu: GPUSnapshot) -> Int {
-        var score = gpu.vendor == "Intel" ? 0 : 2
+        var score = gpu.isIntegrated ? 0 : 2
         if gpu.temperatureC != nil { score += 1 }
         if gpu.fanRPM != nil { score += 1 }
         if gpu.vramTotalBytes != nil { score += 1 }
         return score
+    }
+
+    /// Mac 上的 Intel / Apple GPU 都是核显：无独立风扇，也不发布独立功耗与
+    /// 频率通道。Apple Silicon 的 AGX 加速器没有 PCI 厂商属性，只能按 CPU
+    /// 架构判断。
+    private static let isAppleSilicon = CPUSampler.intSysctl("hw.optional.arm64") == 1
+
+    private static func isIntegrated(vendor: String?) -> Bool {
+        vendor == "Intel" || vendor == "Apple" || isAppleSilicon
     }
 
     // MARK: - Naming

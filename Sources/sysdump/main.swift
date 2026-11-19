@@ -47,10 +47,10 @@ for tick in 1...3 {
       cpu  total=\(f1(cpuSnap.totalUsage))%  user=\(f1(cpuSnap.user))%  sys=\(f1(cpuSnap.system))%  \
     freq=\(optional(cpuSnap.frequencyGHz, f2, suffix: "GHz"))  temp=\(optional(cpuSnap.temperatureC, f1, suffix: "C"))
       cores [\(cpuSnap.cores.count)]: \(cpuSnap.cores.map { f0($0.usage) }.joined(separator: " "))
-      gpu  name=\(gpuSnap.name)  supported=\(gpuSnap.isSupported)
+      gpu  name=\(gpuSnap.name)  integrated=\(gpuSnap.isIntegrated)  supported=\(gpuSnap.isSupported)
            util=\(optional(gpuSnap.utilization))%  temp=\(optional(gpuSnap.temperatureC))C  power=\(optional(gpuSnap.powerW))W  \
     core=\(optional(gpuSnap.coreClockMHz, f0))MHz  mem=\(optional(gpuSnap.memoryClockMHz, f0))MHz
-           vram used=\(gpuSnap.vramUsedBytes.map { ByteFormat.string($0) } ?? "-")  cached=\(gpuSnap.vramCachedBytes.map { ByteFormat.string($0) } ?? "-")  free=\(gpuSnap.vramFreeBytes.map { ByteFormat.string($0) } ?? "-")  total=\(gpuSnap.vramTotalBytes.map { ByteFormat.string($0) } ?? "-")
+           vram used=\(gpuSnap.vramUsedBytes.map { ByteFormat.string($0) } ?? "-")  cached=\(gpuSnap.vramCachedBytes.map { ByteFormat.string($0) } ?? "-")  free=\(gpuSnap.vramFreeBytes.map { ByteFormat.string($0) } ?? "-")  total=\(gpuSnap.vramTotalBytes.map { ByteFormat.string($0) } ?? "-")  shared=\(gpuSnap.sharedMemoryBytes.map { ByteFormat.string($0) } ?? "-")
       net  down=\(ByteFormat.bitsPerSecond(netSnap.downloadBps))  up=\(ByteFormat.bitsPerSecond(netSnap.uploadBps))  iface=\(netSnap.activeInterface ?? "-")
     """)
 }
@@ -78,7 +78,13 @@ let fanSamples = fans.read()
 print("\nFANS (supported: \(fans.hasFans))")
 if fanSamples.isEmpty { print("  none") }
 for fan in fanSamples {
-    print("  \(fan.name.padding(toLength: 10, withPad: " ", startingAt: 0)) now=\(optional(fan.currentRPM, f0))  min=\(optional(fan.minRPM, f0))  max=\(optional(fan.maxRPM, f0))  target=\(optional(fan.targetRPM, f0))")
+    print("  \(fan.name.padding(toLength: 10, withPad: " ", startingAt: 0)) [\(fan.channel)] now=\(optional(fan.currentRPM, f0))  min=\(optional(fan.minRPM, f0))  max=\(optional(fan.maxRPM, f0))  target=\(optional(fan.targetRPM, f0))")
+}
+
+var fanSnapshot = SystemSnapshot()
+fanSnapshot.fans = fanSamples
+if let cooler = fanSnapshot.coolerFan {
+    print("  CPU 卡片显示: \(cooler.name) [\(cooler.channel)] \(optional(cooler.currentRPM, f0)) RPM")
 }
 
 let temps = temperatures.read()

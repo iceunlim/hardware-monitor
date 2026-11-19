@@ -13,6 +13,9 @@ public struct DeviceInfo {
     public let macModel: String
     public let osVersion: String
     public let isHackintosh: Bool
+    /// 内核记录的启动时间。`ProcessInfo.systemUptime` 在睡眠期间不前进，
+    /// 用墙钟差值才对得上用户理解的“已运行”。
+    public let bootDate: Date?
 
     private init() {
         cpuBrand = CPUSampler.stringSysctl("machdep.cpu.brand_string") ?? "Unknown CPU"
@@ -22,6 +25,29 @@ public struct DeviceInfo {
         macModel = CPUSampler.stringSysctl("hw.model") ?? "Mac"
         osVersion = ProcessInfo.processInfo.operatingSystemVersionString
         isHackintosh = Self.detectHackintosh()
+        bootDate = Self.readBootDate()
+    }
+
+    /// 系统版本号本体，例如 `26.7.3`；`osVersion` 还带着构建号。
+    public var shortOSVersion: String {
+        osVersion
+            .replacingOccurrences(of: "Version ", with: "")
+            .components(separatedBy: " (")
+            .first ?? osVersion
+    }
+
+    /// 自启动到现在经过的时间（含睡眠）。
+    public var uptime: TimeInterval? {
+        bootDate.map { Date().timeIntervalSince($0) }
+    }
+
+    private static func readBootDate() -> Date? {
+        var value = timeval()
+        var size = MemoryLayout<timeval>.size
+        guard sysctlbyname("kern.boottime", &value, &size, nil, 0) == 0, value.tv_sec > 0
+        else { return nil }
+        return Date(timeIntervalSince1970: TimeInterval(value.tv_sec)
+                    + TimeInterval(value.tv_usec) / 1_000_000)
     }
 
     /// `hw.model` is spoofed on nearly every Hackintosh, so the SMBIOS identity

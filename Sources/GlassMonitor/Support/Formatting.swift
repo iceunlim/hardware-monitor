@@ -27,6 +27,18 @@ enum Num {
         return String(format: "%.2f GHz", value)
     }
 
+    /// 开机时长，按中文习惯保留最大两个单位。
+    static func uptime(_ seconds: TimeInterval?) -> String {
+        guard let seconds, seconds >= 60 else { return "刚刚启动" }
+        let total = Int(seconds)
+        let days = total / 86_400
+        let hours = (total % 86_400) / 3_600
+        let minutes = (total % 3_600) / 60
+        if days > 0 { return "已运行 \(days) 天 \(hours) 小时" }
+        if hours > 0 { return "已运行 \(hours) 小时 \(minutes) 分" }
+        return "已运行 \(minutes) 分钟"
+    }
+
     /// Base clock, plus the firmware turbo ceiling when one is declared —
     /// e.g. `3.70~4.70 GHz`. Without a ceiling only the base clock is shown.
     static func frequencyRange(base: Double?, ceiling: Double?) -> String {

@@ -46,7 +46,12 @@ public struct GPUSnapshot: Identifiable {
     public var vramUsedBytes: Double?
     public var vramCachedBytes: Double?
     public var vramFreeBytes: Double?
+    /// 核显从系统内存里映射给 GPU 的字节数（GART 已用）；独显不使用此字段。
+    public var sharedMemoryBytes: Double?
     public var isSupported = false
+    /// 集成显卡（Intel / Apple GPU）。它没有独立风扇，macOS 也不为它发布
+    /// 独立功耗与频率通道，面板据此只展示确实存在的指标。
+    public var isIntegrated = false
 
     public init() {}
 
@@ -195,11 +200,23 @@ public struct SystemSnapshot {
         temperatures.map(\.celsius).max()
     }
 
-    /// The fan that actually cools the CPU: the firmware's CPU header, or the
-    /// pump header on AIO loops, or — unnamed firmware — the only spinning one.
+    /// 自动判断的 CPU 风扇：先认固件的 `CPUFAN` 通道（即使读数为 0），再认
+    /// 一体水冷的 `PUMP` 通道，两者都不存在时才退回转速最高的在转风扇。
+    /// 主板把散热器接在别的通道时，用户可在设置里手动指定；这里不擅自把
+    /// 别的通道当成 CPU 风扇，以免掩盖 CPU 风扇停转。
     public var coolerFan: FanSample? {
         fans.first { $0.channel == "CPUFAN" }
             ?? fans.first { $0.channel.uppercased().contains("PUMP") }
-            ?? fans.first { ($0.currentRPM ?? 0) > 0 }
+            ?? fans.filter { ($0.currentRPM ?? 0) > 0 }
+                .max(by: { ($0.currentRPM ?? 0) < ($1.currentRPM ?? 0) })
+            ?? fans.first
+    }
+
+    /// 用户在设置里指定了通道就用它；该通道本次启动中不存在时回退到自动。
+    public func coolingFan(preferring channel: String?) -> FanSample? {
+        if let channel, let selected = fans.first(where: { $0.channel == channel }) {
+            return selected
+        }
+        return coolerFan
     }
 }

@@ -12,7 +12,10 @@ enum SelfShot {
 
         let application = NSApplication.shared
         application.setActivationPolicy(.regular)
-        let host = NSHostingView(rootView: RootView()
+        // 没有高度上限时 RootView 里的 ScrollView 会拿到无限高度，窗口在
+        // setContentSize 时直接崩溃；按当前屏幕可见高度给一个有限值。
+        let maxHeight = max(480, (NSScreen.main?.visibleFrame.height ?? 900) - 48)
+        let host = NSHostingView(rootView: RootView(maxHeight: maxHeight)
             .environmentObject(monitor)
             .environmentObject(settings)
             .frame(width: Panel.cardWidth * 2 + Panel.spacing * 3))

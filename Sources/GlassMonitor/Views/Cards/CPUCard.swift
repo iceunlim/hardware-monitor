@@ -6,6 +6,8 @@ struct CPUCard: View {
     let history: [Double]
     var tempHistory: [Double] = []
     var showsPerCore: Bool
+    /// 设置里指定或自动判断出的 CPU 风扇，由 PanelBody 统一解析后传入。
+    let coolerFan: FanSample?
 
     private var cores: [CoreLoad] { snapshot.cpu.cores }
 
@@ -53,8 +55,8 @@ struct CPUCard: View {
     }
 
     private var coolerText: String {
-        guard let fan = snapshot.coolerFan else { return "—" }
-        let rpm = fan.currentRPM ?? 0
+        guard let coolerFan else { return "—" }
+        let rpm = coolerFan.currentRPM ?? 0
         return rpm > 0 ? "\(Int(rpm.rounded())) RPM" : "停转"
     }
 }

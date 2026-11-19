@@ -23,45 +23,20 @@ enum Panel {
     static let spacing: CGFloat = 14
     static let padding: CGFloat = 14
     static let cardWidth: CGFloat = 226
+    /// 四张卡统一尺寸。高度按内容最高的一张（独显卡片约 189pt）留出余量后固定，
+    /// 数据变化、切换每核心负载或增减指标都不会让某张卡变高、网格抖动。
+    static let cardHeight: CGFloat = 192
 }
 
 extension View {
     /// The card shell: Liquid Glass with a faint colour wash and the
     /// specular response to the pointer that makes the material read as glass.
-    /// Fills its grid slot so rows of cards stay exactly the same size.
+    /// 尺寸固定为 `Panel.cardWidth × Panel.cardHeight`，内容多少都不改变卡片外框。
     func glassCard(_ tint: Color) -> some View {
         padding(Panel.padding)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .frame(width: Panel.cardWidth, height: Panel.cardHeight, alignment: .topLeading)
             .glassEffect(.regular.tint(tint.opacity(0.28)).interactive(),
                          in: .rect(cornerRadius: Panel.corner))
-    }
-}
-
-/// One row of equal-size cards: every slot gets the same fixed width and the
-/// tallest card's ideal height is proposed to all of them, so content
-/// differences cannot skew the grid.
-struct EqualHeightRow: Layout {
-    var spacing: CGFloat
-    var cardWidth: CGFloat
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        var height: CGFloat = 0
-        for subview in subviews {
-            height = max(height, subview.sizeThatFits(.init(width: cardWidth, height: nil)).height)
-        }
-        let width = cardWidth * CGFloat(subviews.count)
-            + spacing * CGFloat(max(0, subviews.count - 1))
-        return CGSize(width: width, height: height)
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        var x = bounds.minX
-        for subview in subviews {
-            subview.place(at: CGPoint(x: x, y: bounds.minY),
-                          anchor: .topLeading,
-                          proposal: .init(width: cardWidth, height: bounds.height))
-            x += cardWidth + spacing
-        }
     }
 }
 
@@ -107,7 +82,7 @@ struct CardHeader: View {
             Image(systemName: systemImage)
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(tint)
-            Text(title).font(.mono(12, .semibold))
+            Text(title).font(.mono(12, .semibold)).lineLimit(1)
             Spacer(minLength: 0)
         }
     }
