@@ -225,6 +225,15 @@ public final class GPUSampler {
     private static func number(_ value: Any?) -> Double? {
         if let number = value as? NSNumber { return Double(truncating: number) }
         if let string = value as? String, let parsed = Double(string) { return parsed }
+        if let data = value as? Data {
+            // 少量 IORegistry 属性以 Data 发布；按本机小端序解码 4/8 字节整数。
+            if data.count == 4 {
+                return Double(data.withUnsafeBytes { $0.loadUnaligned(as: UInt32.self) })
+            }
+            if data.count == 8 {
+                return Double(data.withUnsafeBytes { $0.loadUnaligned(as: UInt64.self) })
+            }
+        }
         return nil
     }
 }

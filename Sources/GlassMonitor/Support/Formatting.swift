@@ -14,6 +14,7 @@ enum Num {
 
     static func watts(_ value: Double?) -> String {
         guard let value else { return "—" }
+        if value > 0, value < 10 { return String(format: "%.1f W", value) }
         return String(format: "%.0f W", value)
     }
 

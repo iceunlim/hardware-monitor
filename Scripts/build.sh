@@ -27,8 +27,8 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 	<key>CFBundleName</key><string>玻璃监控</string>
 	<key>CFBundleDisplayName</key><string>玻璃监控</string>
 	<key>CFBundlePackageType</key><string>APPL</string>
-	<key>CFBundleShortVersionString</key><string>1.1.0</string>
-	<key>CFBundleVersion</key><string>2</string>
+	<key>CFBundleShortVersionString</key><string>1.1.1</string>
+	<key>CFBundleVersion</key><string>3</string>
 	<key>LSMinimumSystemVersion</key><string>26.0</string>
 	<key>LSUIElement</key><true/>
 	<key>LSApplicationCategoryType</key><string>public.app-category.utilities</string>
@@ -51,5 +51,6 @@ if [[ -f Resources/AppIcon.png ]]; then
   rm -rf "$ICONDIR"
 fi
 
+xattr -cr "$APP"
 codesign --force --sign - --timestamp=none "$APP" >/dev/null 2>&1
 echo "built $APP"
