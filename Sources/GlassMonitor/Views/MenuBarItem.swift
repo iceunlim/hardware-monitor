@@ -66,20 +66,25 @@ enum MenuBarItem: String, CaseIterable, Identifiable {
         case .memory:
             return String(format: "%3.0f%%", snapshot.memory.pressurePercent)
         case .net:
-            return "↓ \(Self.rate(snapshot.network.downloadBps)) ↑ \(Self.rate(snapshot.network.uploadBps))"
+            return "↓\(Self.rate(snapshot.network.downloadBps)) ↑\(Self.rate(snapshot.network.uploadBps))"
         }
     }
 
-    /// Same one-decimal precision as the cards, padded to a stable width.
+    /// Same one-decimal precision as the cards, without the unit space so the
+    /// token stays at five characters in the narrow menu bar.
     private static func degrees(_ value: Double?) -> String {
-        guard let value else { return "  -- °C" }
-        return String(format: "%4.1f °C", value)
+        guard let value else { return "  --°C" }
+        return String(format: "%4.1f°C", value)
     }
 
-    /// Bit/s at 1000-based units, the same `Num.fixedRate` the network card
-    /// uses — a byte/binary rendering here made the two readouts differ by 8x.
+    /// Bit/s at 1000-based units from the same `Num.bitRate` ladder as the
+    /// card, but with a one-letter unit and no extra padding — a MacBook menu
+    /// bar cannot spare ten characters per direction.
     private static func rate(_ bytesPerSecond: Double) -> String {
-        let rate = Num.fixedRate(bytesPerSecond)
-        return "\(rate.value) \(rate.unit)"
+        let rate = Num.bitRate(bytesPerSecond)
+        let body = rate.value >= 9.95
+            ? String(format: "%3.0f", rate.value)
+            : String(format: "%3.1f", rate.value)
+        return body + String(rate.unit.prefix(1))
     }
 }

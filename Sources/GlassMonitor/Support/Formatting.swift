@@ -59,9 +59,9 @@ enum Num {
         return String(format: "%.0f°", value)
     }
 
-    /// Fixed-shape bit rate: five characters of value plus a four-letter unit,
-    /// shared by the network card and the menu bar so both always agree.
-    static func fixedRate(_ bytesPerSecond: Double) -> (value: String, unit: String) {
+    /// Bit/s in 1000-based units, shared by the card (full unit) and the menu
+    /// bar (single-letter unit) so both always derive from the same ladder.
+    static func bitRate(_ bytesPerSecond: Double) -> (value: Double, unit: String) {
         let bits = max(0, bytesPerSecond) * 8
         let ladder: [(scale: Double, unit: String)] = [(1e9, "Gbps"), (1e6, "Mbps"), (1e3, "Kbps")]
         var index = ladder.count - 1
@@ -70,12 +70,19 @@ enum Num {
             break
         }
         var scaled = bits / ladder[index].scale
-        // 999.95 会被 %5.1f 舍入成 1000.0，挤破固定宽度；提前升一档。
-        if scaled >= 999.95, index > 0 {
+        // 999.5 起再格式化就会进位成四位数，固定宽度会破；提前升一档。
+        if scaled >= 999.5, index > 0 {
             index -= 1
             scaled = bits / ladder[index].scale
         }
-        return (String(format: "%5.1f", scaled), ladder[index].unit)
+        return (scaled, ladder[index].unit)
+    }
+
+    /// Fixed-shape bit rate: five characters of value plus a four-letter unit,
+    /// used by the network card where there is room for `Mbps`.
+    static func fixedRate(_ bytesPerSecond: Double) -> (value: String, unit: String) {
+        let rate = bitRate(bytesPerSecond)
+        return (String(format: "%5.1f", rate.value), rate.unit)
     }
 
     /// Fixed-shape byte total: six characters of value plus a two-letter unit.
