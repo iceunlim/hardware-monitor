@@ -33,8 +33,8 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 		<string>zh-Hans</string>
 	</array>
 	<key>CFBundlePackageType</key><string>APPL</string>
-	<key>CFBundleShortVersionString</key><string>1.1.1</string>
-	<key>CFBundleVersion</key><string>3</string>
+	<key>CFBundleShortVersionString</key><string>1.2.0</string>
+	<key>CFBundleVersion</key><string>4</string>
 	<key>LSMinimumSystemVersion</key><string>26.0</string>
 	<key>LSUIElement</key><true/>
 	<key>LSApplicationCategoryType</key><string>public.app-category.utilities</string>
