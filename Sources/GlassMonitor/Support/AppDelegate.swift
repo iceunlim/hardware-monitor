@@ -97,8 +97,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 .filter { $0.domain == domain && settings.menuBarItems.contains($0) }
                 .compactMap { $0.text(snapshot) }
             guard !texts.isEmpty else { return nil }
-            // 同一硬件域的温度/占用也上下排列，横向只按最长的一项占宽。
-            return (domain.symbol, texts.joined(separator: "\n"))
+            // 只有网络的上下行拆成两行；CPU/GPU 的温度和占用保持单行，
+            // 否则两列短行看起来比横排更零碎。
+            let separator = domain == .net ? "\n" : " "
+            return (domain.symbol, texts.joined(separator: separator))
         }
         button.title = ""
         button.imagePosition = .imageOnly
