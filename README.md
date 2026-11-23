@@ -90,6 +90,8 @@ open build/GlassMonitor.app
 
 脚本会完成 release 构建、生成 `build/GlassMonitor.app`、复制 `Resources/*.lproj` 本地化资源、用 `Resources/AppIcon.png` 生成 `AppIcon.icns`，并进行 ad-hoc 签名。产物路径由 `swift build --show-bin-path` 解析，arm64 与 x86_64 通用。
 
+版本号以根目录 `VERSION`（`x.y.z`）为唯一来源，`CFBundleVersion` 默认取 git 提交数；需要固定构建号时可用 `BUILD_NUMBER=123 bash Scripts/build.sh release`。提交到 `main` 后，`.github/workflows/build.yml` 会自动构建 arm64 与 x86_64 两个产物，zip 文件名与 artifact 名都带版本号。
+
 诊断传感器可用：
 
 ```bash

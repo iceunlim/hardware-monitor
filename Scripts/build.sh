@@ -23,6 +23,22 @@ cd "$(dirname "$0")/.."
 CONFIG="${1:-release}"
 APP="build/GlassMonitor.app"
 
+# 版本号只有一个来源：根目录 VERSION。构建号默认取提交数，CI 可用
+# BUILD_NUMBER 覆盖，保证 Info.plist 里的两个字段不需要手工同步。
+VERSION="$(tr -d '[:space:]' < VERSION)"
+if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  echo "error: VERSION 必须是 x.y.z 形式，当前为 '$VERSION'" >&2
+  exit 1
+fi
+BUILD_NUMBER="${BUILD_NUMBER:-}"
+if [[ -z "$BUILD_NUMBER" ]]; then
+  BUILD_NUMBER="$(git rev-list --count HEAD 2>/dev/null || echo 1)"
+fi
+if [[ ! "$BUILD_NUMBER" =~ ^[0-9]+$ ]]; then
+  echo "error: BUILD_NUMBER 必须是整数，当前为 '$BUILD_NUMBER'" >&2
+  exit 1
+fi
+
 swift build -c "$CONFIG"
 # 产物路径随工具链和架构变化（arm64/x86_64、.build/release 或 .build/out/...），
 # 交给 SwiftPM 给出，不能写死。
@@ -33,7 +49,7 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/GlassMonitor"
 
-cat > "$APP/Contents/Info.plist" <<'PLIST'
+cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -51,8 +67,8 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 		<string>zh-Hans</string>
 	</array>
 	<key>CFBundlePackageType</key><string>APPL</string>
-	<key>CFBundleShortVersionString</key><string>1.2.0</string>
-	<key>CFBundleVersion</key><string>4</string>
+	<key>CFBundleShortVersionString</key><string>${VERSION}</string>
+	<key>CFBundleVersion</key><string>${BUILD_NUMBER}</string>
 	<key>LSMinimumSystemVersion</key><string>26.0</string>
 	<key>LSUIElement</key><true/>
 	<key>LSApplicationCategoryType</key><string>public.app-category.utilities</string>

@@ -23,9 +23,20 @@ jobs:
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # 构建号取提交数，浅克隆会让它永远是 1。
+          fetch-depth: 0
+
+      - name: Read version
+        id: version
+        run: |
+          version="$(tr -d '[:space:]' < VERSION)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "build=$(git rev-list --count HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Show toolchain
         run: |
+          echo "version: ${{ steps.version.outputs.version }} (${{ steps.version.outputs.build }})"
           xcodebuild -version
           swift --version
 
@@ -33,14 +44,19 @@ jobs:
         run: bash Scripts/build.sh release
 
       - name: Verify bundle
-        run: codesign --verify --deep --strict --verbose=2 build/GlassMonitor.app
+        run: |
+          codesign --verify --deep --strict --verbose=2 build/GlassMonitor.app
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' build/GlassMonitor.app/Contents/Info.plist
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' build/GlassMonitor.app/Contents/Info.plist
 
       - name: Package app
-        run: ditto -c -k --sequesterRsrc --keepParent build/GlassMonitor.app build/GlassMonitor.zip
+        run: |
+          name="GlassMonitor-${{ steps.version.outputs.version }}-${{ matrix.arch }}"
+          ditto -c -k --sequesterRsrc --keepParent build/GlassMonitor.app "build/$name.zip"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: GlassMonitor-macos26-${{ matrix.arch }}
-          path: build/GlassMonitor.zip
+          name: GlassMonitor-${{ steps.version.outputs.version }}-${{ matrix.arch }}
+          path: build/GlassMonitor-${{ steps.version.outputs.version }}-${{ matrix.arch }}.zip
           if-no-files-found: error
