@@ -49,11 +49,6 @@ public final class MemorySampler {
         snapshot.usedBytes = active + wired + compressed
         snapshot.pressurePercent = snapshot.usedBytes / snapshot.totalBytes * 100
 
-        let uncompressed = Double(stats.total_uncompressed_pages_in_compressor) * pages
-        if uncompressed > 0, compressed > 0 {
-            snapshot.compressionRatio = min(1, uncompressed / compressed)
-        }
-
         readSwap(into: &snapshot)
         return snapshot
     }

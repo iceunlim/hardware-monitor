@@ -45,7 +45,7 @@ enum Num {
     static func frequencyRange(base: Double?, ceiling: Double?) -> String {
         guard let base, base > 0 else { return gigahertz(ceiling) }
         if let ceiling, ceiling > base + 0.05 {
-            return String(format: "%.2f~%.2fGHz", base, ceiling)
+            return String(format: "%.2f~%.2f GHz", base, ceiling)
         }
         return String(format: "%.2f GHz", base)
     }

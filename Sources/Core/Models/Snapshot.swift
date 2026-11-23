@@ -72,8 +72,6 @@ public struct MemorySnapshot {
     public var swapTotalBytes: Double = 0
     public var swapUsedBytes: Double = 0
     public var pressurePercent: Double = 0
-    /// Compressed-memory savings: physical footprint versus the bytes it holds.
-    public var compressionRatio: Double?
 
     public init() {}
 }

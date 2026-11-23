@@ -9,6 +9,19 @@ extension Font {
     }
 }
 
+/// A small scale covers every label in the cards; keeping the sizes named
+/// stops a stray 10 pt or 13 pt label from making one card look different.
+enum TypeScale {
+    static let display: CGFloat = 30
+    static let headline: CGFloat = 16
+    static let ring: CGFloat = 15
+    static let title: CGFloat = 12
+    static let body: CGFloat = 11
+    static let unit: CGFloat = 10
+    static let caption: CGFloat = 9
+    static let micro: CGFloat = 8
+}
+
 /// One tint per domain, chosen to stay legible over any wallpaper.
 enum Accent {
     static let cpu = Color(red: 0.36, green: 0.66, blue: 1.0)
@@ -22,12 +35,7 @@ enum Panel {
     static let corner: CGFloat = 22
     static let spacing: CGFloat = 14
     static let padding: CGFloat = 14
-    /// English labels are wider than the two-character Chinese ones. 240 pt
-    /// keeps "Compressed" and its value on one line; the height stays fixed so
-    /// data changes never make the grid jump.
-    static var cardWidth: CGFloat {
-        Bundle.main.preferredLocalizations.first?.hasPrefix("en") == true ? 240 : 226
-    }
+    static let cardWidth: CGFloat = 226
     /// 四张卡统一尺寸。高度按内容最高的一张（独显卡片约 189pt）留出余量后固定，
     /// 数据变化、切换每核心负载或增减指标都不会让某张卡变高、网格抖动。
     static let cardHeight: CGFloat = 192
@@ -49,13 +57,13 @@ extension View {
 struct MetricValue: View {
     let value: String
     var unit: String?
-    var font: Font = .mono(30, .semibold)
+    var font: Font = .mono(TypeScale.display, .semibold)
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 3) {
             Text(value).font(font)
             if let unit {
-                Text(unit).font(.mono(12, .medium))
+                Text(unit).font(.mono(TypeScale.title, .medium))
                     .foregroundStyle(.secondary)
             }
         }
@@ -68,12 +76,12 @@ struct MetricRow: View {
     let value: String
 
     var body: some View {
-        HStack(spacing: 6) {
-            Text(label).font(.mono(11)).foregroundStyle(.secondary)
+        HStack(spacing: 4) {
+            Text(label).font(.mono(TypeScale.body)).foregroundStyle(.secondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
-            Spacer(minLength: 4)
-            Text(value).font(.mono(11, .medium))
+            Spacer(minLength: 2)
+            Text(value).font(.mono(TypeScale.body, .medium))
                 .foregroundStyle(.primary.opacity(0.92))
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
@@ -89,9 +97,9 @@ struct CardHeader: View {
     var body: some View {
         HStack(spacing: 5) {
             Image(systemName: systemImage)
-                .font(.system(size: 11, weight: .semibold))
+                .font(.system(size: TypeScale.body, weight: .semibold))
                 .foregroundStyle(tint)
-            Text(title).font(.mono(12, .semibold)).lineLimit(1)
+            Text(title).font(.mono(TypeScale.title, .semibold)).lineLimit(1)
             Spacer(minLength: 0)
         }
     }

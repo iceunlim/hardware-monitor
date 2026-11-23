@@ -1,12 +1,12 @@
 import SwiftUI
-import AppKit
 import Core
 
-/// The card stack shown inside the menu bar popover.
+/// The card stack shown inside the menu bar panel.
 struct PanelBody: View {
     let snapshot: SystemSnapshot
     var histories = PanelBody.Histories()
     var interval: TimeInterval = 2
+    var onOpenSettings: (() -> Void)? = nil
     @EnvironmentObject private var settings: AppSettings
 
     struct Histories {
@@ -47,11 +47,11 @@ struct PanelBody: View {
         HStack(spacing: 8) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(identityLine)
-                    .font(.mono(11, .semibold))
+                    .font(.mono(TypeScale.body, .semibold))
                     .lineLimit(1)
                 FanFlow(spacing: 6, lineSpacing: 4) {
                     Text(Num.uptime(DeviceInfo.shared.uptime))
-                        .font(.mono(9))
+                        .font(.mono(TypeScale.caption))
                         .foregroundStyle(.secondary)
                     ForEach(headerFans, id: \.channel) { fan in
                         FanChip(fan: fan)
@@ -61,12 +61,13 @@ struct PanelBody: View {
 
             Spacer(minLength: 6)
 
-            Menu {
-                menuContent
+            Button {
+                onOpenSettings?()
+                NotificationCenter.default.post(name: .openSettingsWindow, object: nil)
             } label: {
                 Image(systemName: "slider.horizontal.3")
             }
-            .menuIndicator(.hidden)
+            .accessibilityLabel(L10n.t("settings.open"))
             .fixedSize()
         }
         .controlSize(.small)
@@ -94,115 +95,13 @@ struct PanelBody: View {
         return snapshot.fans.filter { settings.headerFanChannels.contains($0.channel) }
     }
 
-    private var autoFansBinding: Binding<Bool> {
-        Binding(
-            get: { settings.headerFansAuto },
-            set: { on in
-                // 关掉自动时用当前在转的风扇作为初始勾选，避免顶栏突然空掉。
-                if !on, settings.headerFanChannels.isEmpty {
-                    settings.headerFanChannels = Set(headerFans.map(\.channel))
-                }
-                settings.headerFansAuto = on
-            })
-    }
-
-    private func fanBinding(_ fan: FanSample) -> Binding<Bool> {
-        Binding(
-            get: {
-                // 自动模式下勾选状态跟随“当前是否在转”，让用户一眼看出自动选了谁。
-                if settings.headerFansAuto { return (fan.currentRPM ?? 0) > 0 }
-                return settings.headerFanChannels.contains(fan.channel)
-            },
-            set: { on in
-                if on { settings.headerFanChannels.insert(fan.channel) }
-                else { settings.headerFanChannels.remove(fan.channel) }
-            })
-    }
-
-    private func fanMenuTitle(_ fan: FanSample) -> String {
-        let rpm = fan.currentRPM ?? 0
-        let value = rpm > 0 ? "\(Int(rpm.rounded())) RPM" : L10n.t("fan.stopped")
-        return "\(fan.name) · \(fan.channel) · \(value)"
-    }
-
-    @ViewBuilder private var menuContent: some View {
-        Section(L10n.t("menu.language")) {
-            Picker(L10n.t("menu.language"), selection: languageBinding) {
-                Text(L10n.t("language.system")).tag(AppLanguage.system)
-                Text("简体中文").tag(AppLanguage.chinese)
-                Text("English").tag(AppLanguage.english)
-            }
-            .pickerStyle(.inline)
-        }
-
-        Section(L10n.t("menu.headerFans")) {
-            Toggle(L10n.t("menu.headerFans.auto"), isOn: autoFansBinding)
-            ForEach(snapshot.fans, id: \.channel) { fan in
-                Toggle(fanMenuTitle(fan), isOn: fanBinding(fan))
-                    .disabled(settings.headerFansAuto)
-            }
-            if snapshot.fans.isEmpty { Text(L10n.t("menu.noFans")) }
-        }
-
-        Section(L10n.t("menu.cpuFan")) {
-            Picker(L10n.t("menu.cpuFan"), selection: $settings.cpuFanChannel) {
-                Text(L10n.t("menu.cpuFan.auto")).tag(Optional<String>.none)
-                ForEach(snapshot.fans, id: \.channel) { fan in
-                    Text(fanMenuTitle(fan)).tag(Optional(fan.channel))
-                }
-            }
-            .pickerStyle(.inline)
-        }
-
-        Section(L10n.t("menu.menuBar")) {
-            ForEach(MenuBarItem.allCases) { item in
-                Toggle(item.title, isOn: Binding(
-                    get: { settings.menuBarItems.contains(item) },
-                    set: { on in
-                        if on { settings.menuBarItems.insert(item) }
-                        else { settings.menuBarItems.remove(item) }
-                    }))
-            }
-        }
-
-        Picker(L10n.t("menu.chartWindow"), selection: $settings.curveMinutes) {
-            Text(L10n.t("menu.chartWindow.1m")).tag(1.0)
-            Text(L10n.t("menu.chartWindow.3m")).tag(3.0)
-            Text(L10n.t("menu.chartWindow.5m")).tag(5.0)
-        }
-        .pickerStyle(.inline)
-
-        Picker(L10n.t("menu.interval"), selection: $settings.interval) {
-            Text(L10n.t("menu.interval.1s")).tag(1.0)
-            Text(L10n.t("menu.interval.2s")).tag(2.0)
-            Text(L10n.t("menu.interval.3s")).tag(3.0)
-            Text(L10n.t("menu.interval.5s")).tag(5.0)
-        }
-        .pickerStyle(.inline)
-
-        Toggle(L10n.t("menu.perCore"), isOn: $settings.showsPerCore)
-
-        Toggle(L10n.t("menu.launchAtLogin"), isOn: Binding(
-            get: { settings.launchAtLogin },
-            set: { settings.setLaunchAtLogin($0) }
-        ))
-
-        Divider()
-
-        Button(L10n.format("menu.quit", AppInfo.displayName)) { NSApplication.shared.terminate(nil) }
-    }
-
     /// One card per GPU, not per accelerator: when no accelerator answered, the
 /// fallback identity is still shown as the only card.
     private var displayedGPUs: [GPUSnapshot] {
         snapshot.gpus.isEmpty ? [snapshot.gpu] : snapshot.gpus
     }
 
-    private var languageBinding: Binding<AppLanguage> {
-        Binding(get: { settings.language }, set: { settings.setLanguage($0) })
-    }
-
-    /// Every strip chart shows the same recent window, chosen in the header menu.
+    /// Every strip chart shows the same recent window, chosen in Settings.
     private var windowed: Histories {
         let count = max(2, Int((settings.curveMinutes * 60 / max(0.5, interval)).rounded()))
         func window(_ series: [Double]) -> [Double] { Array(series.suffix(count)) }
@@ -223,6 +122,7 @@ private struct PanelHeightKey: PreferenceKey {
 struct RootView: View {
     var maxHeight: CGFloat = .greatestFiniteMagnitude
     var onHeight: ((CGFloat) -> Void)? = nil
+    var onOpenSettings: (() -> Void)? = nil
     @State private var measured: CGFloat?
     @EnvironmentObject private var monitor: HardwareMonitor
     @EnvironmentObject private var settings: AppSettings
@@ -254,7 +154,7 @@ struct RootView: View {
             upload: monitor.uploadHistory,
             cpuTemp: monitor.cpuTempHistory,
             gpuTemp: monitor.gpuTempHistories
-        ), interval: monitor.interval)
+        ), interval: monitor.interval, onOpenSettings: onOpenSettings)
         .environmentObject(settings)
         .padding(Panel.spacing)
     }
@@ -311,13 +211,13 @@ private struct FanChip: View {
     var body: some View {
         HStack(spacing: 4) {
             Image(systemName: "fanblades")
-                .font(.system(size: 8, weight: .semibold))
+                .font(.system(size: TypeScale.micro, weight: .semibold))
                 .foregroundStyle(.secondary)
             Text(fan.name)
-                .font(.mono(9))
+                .font(.mono(TypeScale.caption))
                 .foregroundStyle(.secondary)
             Text(value)
-                .font(.mono(9, .medium))
+                .font(.mono(TypeScale.caption, .medium))
         }
         .lineLimit(1)
         .padding(.horizontal, 6)

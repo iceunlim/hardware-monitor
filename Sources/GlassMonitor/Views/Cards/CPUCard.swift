@@ -42,7 +42,7 @@ struct CPUCard: View {
                                text: L10n.format("legend.temperature", Num.degrees(snapshot.cpuTemperature)))
                     Spacer(minLength: 4)
                     Text(Num.frequencyRange(base: snapshot.cpu.frequencyGHz, ceiling: snapshot.cpu.turboGHz))
-                        .font(.mono(9))
+                        .font(.mono(TypeScale.caption))
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)

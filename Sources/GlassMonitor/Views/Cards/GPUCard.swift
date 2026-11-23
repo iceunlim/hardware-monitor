@@ -46,9 +46,9 @@ struct GPUCard: View {
                 if let memory = memoryUsage {
                     VStack(alignment: .leading, spacing: 3) {
                         HStack(spacing: 6) {
-                            Text(L10n.t("metric.vram")).font(.mono(11)).foregroundStyle(.secondary)
+                            Text(L10n.t("metric.vram")).font(.mono(TypeScale.body)).foregroundStyle(.secondary)
                             Spacer(minLength: 4)
-                            Text(memory.text).font(.mono(11, .medium))
+                            Text(memory.text).font(.mono(TypeScale.body, .medium))
                         }
                         LevelBar(fraction: memory.fraction, color: Accent.gpu)
                     }
@@ -57,9 +57,9 @@ struct GPUCard: View {
                 // 核显用共享内存：放在独显“显存”的位置，填补卡片下半部分的空白。
                 if gpu.isIntegrated, let shared = gpu.sharedMemoryBytes {
                     HStack(spacing: 6) {
-                        Text(L10n.t("metric.sharedMemory")).font(.mono(11)).foregroundStyle(.secondary)
+                        Text(L10n.t("metric.sharedMemory")).font(.mono(TypeScale.body)).foregroundStyle(.secondary)
                         Spacer(minLength: 4)
-                        Text(ByteFormat.string(shared)).font(.mono(11, .medium))
+                        Text(ByteFormat.string(shared)).font(.mono(TypeScale.body, .medium))
                     }
                 }
 
@@ -74,7 +74,7 @@ struct GPUCard: View {
                         Spacer(minLength: 6)
                         if let clock = gpu.coreClockMHz, clock > 0 {
                             Text(Num.megahertz(clock))
-                                .font(.mono(9))
+                                .font(.mono(TypeScale.caption))
                                 .foregroundStyle(.secondary)
                                 .lineLimit(1)
                         }
@@ -104,12 +104,12 @@ struct GPUCard: View {
             } label: {
                 HStack(spacing: 5) {
                     Image(systemName: "display")
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.system(size: TypeScale.body, weight: .semibold))
                         .foregroundStyle(Accent.gpu)
-                    Text(gpu.displayName).font(.mono(12, .semibold)).lineLimit(1)
+                    Text(gpu.displayName).font(.mono(TypeScale.title, .semibold)).lineLimit(1)
                     Spacer(minLength: 0)
                     Image(systemName: "chevron.down")
-                        .font(.system(size: 8, weight: .bold))
+                        .font(.system(size: TypeScale.micro, weight: .bold))
                         .foregroundStyle(.secondary)
                 }
             }

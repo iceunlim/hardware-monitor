@@ -36,11 +36,11 @@ struct NetworkCard: View {
             HStack(spacing: 2) {
                 if !trailing { arrowGlyph(arrow, color) }
                 Text(rate.value)
-                    .font(.mono(16, .semibold))
+                    .font(.mono(TypeScale.headline, .semibold))
                     .lineLimit(1)
                     .frame(width: 52, alignment: .trailing)
                 Text(rate.unit)
-                    .font(.mono(10, .medium))
+                    .font(.mono(TypeScale.unit, .medium))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .frame(width: 30, alignment: .leading)
@@ -48,11 +48,11 @@ struct NetworkCard: View {
             }
             HStack(spacing: 2) {
                 Text(total.value)
-                    .font(.mono(9))
+                    .font(.mono(TypeScale.caption))
                     .foregroundStyle(.secondary)
                     .frame(width: 36, alignment: .trailing)
                 Text(total.unit)
-                    .font(.mono(9))
+                    .font(.mono(TypeScale.caption))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .frame(width: 16, alignment: .leading)
@@ -62,7 +62,7 @@ struct NetworkCard: View {
 
     private func arrowGlyph(_ name: String, _ color: Color) -> some View {
         Image(systemName: name)
-            .font(.system(size: 9, weight: .bold))
+            .font(.system(size: TypeScale.caption, weight: .bold))
             .foregroundStyle(color)
             .frame(width: 8)
     }

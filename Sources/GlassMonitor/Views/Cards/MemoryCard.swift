@@ -20,7 +20,6 @@ struct MemoryCard: View {
                     MetricRow(label: L10n.t("memory.used"), value: ByteFormat.string(memory.usedBytes))
                     MetricRow(label: L10n.t("memory.total"), value: ByteFormat.string(memory.totalBytes))
                     MetricRow(label: L10n.t("memory.compressed"), value: ByteFormat.string(memory.compressedBytes))
-                    MetricRow(label: L10n.t("memory.ratio"), value: compressionRatioText)
                 }
                 Spacer(minLength: 0)
             }
@@ -40,7 +39,7 @@ struct MemoryCard: View {
                     Legend(color: Color(red: 0.78, green: 0.44, blue: 0.72), text: L10n.t("memory.legend.compressed"))
                     Legend(color: Color(red: 0.55, green: 0.72, blue: 0.55), text: L10n.t("memory.legend.cached"))
                 }
-                .font(.mono(9))
+                .font(.mono(TypeScale.caption))
                 .foregroundStyle(.secondary)
 
                 Sparkline(values: history, color: Accent.memory, ceiling: 100)
@@ -49,11 +48,6 @@ struct MemoryCard: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
         }
         .glassCard(Accent.memory)
-    }
-
-    private var compressionRatioText: String {
-        guard let ratio = memory.compressionRatio, ratio > 1.01 else { return "—" }
-        return String(format: "%.1f×", ratio)
     }
 }
 

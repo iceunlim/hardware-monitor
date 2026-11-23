@@ -15,6 +15,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var statusItem: NSStatusItem!
     private var panelController: PanelController!
+    private var settingsWindowController: SettingsWindowController?
+    private var settingsObserver: NSObjectProtocol?
     private var cancellables: Set<AnyCancellable> = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -34,6 +36,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         panelController = PanelController(statusItem: statusItem, monitor: monitor, settings: settings)
+        settingsObserver = NotificationCenter.default.addObserver(
+            forName: .openSettingsWindow, object: nil, queue: .main
+        ) { [weak self] _ in
+            DispatchQueue.main.async { self?.showSettings() }
+        }
 
         monitor.$snapshot
             .receive(on: DispatchQueue.main)
@@ -157,6 +164,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             print("selftest error: \(error)")
         }
         NSApp.terminate(nil)
+    }
+
+    private func showSettings() {
+        if settingsWindowController == nil {
+            settingsWindowController = SettingsWindowController(settings: settings, monitor: monitor)
+        }
+        settingsWindowController?.present()
     }
 
     /// Left click toggles the panel; right click dismisses it and drops the

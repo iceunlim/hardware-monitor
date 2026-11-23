@@ -1,5 +1,4 @@
 import SwiftUI
-import Core
 
 @main
 struct GlassMonitorApp: App {

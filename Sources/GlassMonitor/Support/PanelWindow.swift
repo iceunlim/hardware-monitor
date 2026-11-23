@@ -72,7 +72,7 @@ final class MenuBarPanel: NSPanel {
 /// The monitors are the important part: a global mouse monitor sees clicks in
 /// other apps (mouse events do not need Accessibility permission), while the
 /// local monitor handles clicks inside this app, Escape, and keeps menu
-/// tracking (`NSMenu` popups such as the gear menu) from closing the panel.
+/// tracking (`NSMenu` popups such as the GPU selector) from closing the panel.
 @MainActor
 final class PanelController {
     private let statusItem: NSStatusItem
@@ -100,6 +100,8 @@ final class PanelController {
         panel = MenuBarPanel(contentRect: NSRect(x: 0, y: 0, width: width, height: height))
         let host = NSHostingView(rootView: RootView(maxHeight: maxHeight, onHeight: { [weak self] height in
             self?.contentHeightChanged(height)
+        }, onOpenSettings: { [weak self] in
+            self?.hide()
         })
         .environmentObject(monitor)
         .environmentObject(settings)
@@ -120,13 +122,8 @@ final class PanelController {
         let visible = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: width, height: height)
         let frame = self.frame(anchor: anchor, visible: visible)
         panel.setFrame(frame, display: false)
-        panel.alphaValue = 0
+        panel.alphaValue = 1
         panel.makeKeyAndOrderFront(nil)
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.14
-            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            panel.animator().alphaValue = 1
-        }
         isShown = true
         button.highlight(true)
         installMonitors()
@@ -188,8 +185,8 @@ final class PanelController {
         if let local = NSEvent.addLocalMonitorForEvents(matching: mouseMask.union(.keyDown), handler: { [weak self] event in
             guard let self else { return event }
             if event.type == .keyDown {
-                // Let an open menu (the header's gear menu) consume Escape
-                // first; only close the panel when nothing is tracking.
+                // Let an open menu (for example the GPU selector) consume
+                // Escape first; only close the panel when nothing is tracking.
                 if event.keyCode == 53, !Self.isMenuOpen {
                     self.hide()
                     return nil
@@ -217,10 +214,8 @@ final class PanelController {
         ) { [weak self] _ in
             DispatchQueue.main.async { self?.hide() }
         }
-        // Cmd-Tab (or any other app activation) must not leave the panel
-        // floating above an app the user has just switched to. The panel is
-        // non-activating, so NSApplication's own resign-active notification
-        // never fires for it.
+        // Cmd-Tab or another app activation must not leave a keyboard-focused
+        // panel floating over the app the user switched to.
         appObserver = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main
         ) { [weak self] note in

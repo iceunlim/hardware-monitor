@@ -67,19 +67,22 @@ enum MenuBarItem: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Units keep the same one-space policy as the cards; percentages stay
+    /// attached (`35 °C` but `53%`).
     private static func degrees(_ value: Double?) -> String {
-        guard let value else { return " --°C" }
-        return String(format: "%3.0f°C", value)
+        guard let value else { return " -- °C" }
+        return String(format: "%3.0f °C", value)
     }
 
-    /// Always four characters: three of value plus one unit letter.
+    /// Fixed width: the value and its unit letter. The separator is part of
+    /// the token so the status item never jumps as traffic changes.
     private static func rate(_ bytesPerSecond: Double) -> String {
         let units: [(Double, String)] = [(1_073_741_824, "G"), (1_048_576, "M"), (1024, "K")]
         for (scale, suffix) in units where bytesPerSecond >= scale {
             let value = bytesPerSecond / scale
             let body = value >= 9.95 ? String(format: "%3.0f", value) : String(format: "%3.1f", value)
-            return body + suffix
+            return body + " " + suffix
         }
-        return String(format: "%3.1fK", bytesPerSecond / 1024)
+        return String(format: "%3.1f K", bytesPerSecond / 1024)
     }
 }

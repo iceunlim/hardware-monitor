@@ -1,5 +1,12 @@
 /* Application */
 "menu.quit" = "Quit %@";
+"settings.window.title" = "Settings";
+"settings.open" = "Open Settings";
+"settings.tab.general" = "General";
+"settings.tab.fans" = "Fans";
+"settings.tab.menuBar" = "Menu Bar";
+"settings.section.general" = "General";
+"settings.section.display" = "Display";
 
 /* Header */
 "header.uptime.justStarted" = "Just started";
@@ -19,6 +26,7 @@
 "menu.headerFans" = "Header Fans";
 "menu.headerFans.auto" = "Auto (running fans only)";
 "menu.noFans" = "No fans detected";
+"settings.cpuFan.picker" = "Fan";
 "menu.cpuFan" = "CPU Card Fan";
 "menu.cpuFan.auto" = "Auto (CPU fan → pump)";
 "menu.menuBar" = "Menu Bar Readouts";
@@ -59,7 +67,6 @@
 "memory.used" = "Used";
 "memory.total" = "Total";
 "memory.compressed" = "Compressed";
-"memory.ratio" = "Ratio";
 "memory.legend.app" = "App";
 "memory.legend.wired" = "Wired";
 "memory.legend.compressed" = "Compressed";

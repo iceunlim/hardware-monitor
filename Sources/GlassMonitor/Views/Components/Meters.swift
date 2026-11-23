@@ -120,7 +120,7 @@ struct MiniLegend: View {
         HStack(spacing: 4) {
             Circle().fill(color).frame(width: 4, height: 4)
             Text(text)
-                .font(.mono(9))
+                .font(.mono(TypeScale.caption))
                 .lineLimit(1)
                 .foregroundStyle(.secondary)
         }
@@ -146,7 +146,7 @@ struct UsageRing: View {
                 .animation(.smooth(duration: 0.45), value: percent)
             VStack(spacing: -1) {
                 Text(label)
-                    .font(.mono(15, .semibold))
+                    .font(.mono(TypeScale.ring, .semibold))
             }
         }
     }
