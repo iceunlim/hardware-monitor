@@ -11,7 +11,15 @@ import Core
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let monitor = HardwareMonitor()
-    let settings = AppSettings()
+    let settings: AppSettings
+    let updater: UpdateController
+
+    override init() {
+        let settings = AppSettings()
+        self.settings = settings
+        updater = UpdateController(settings: settings)
+        super.init()
+    }
 
     private var statusItem: NSStatusItem!
     private var panelController: PanelController!
@@ -84,7 +92,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
            let gpu = snapshot.gpus.first(where: { $0.id == selected }) {
             snapshot.gpu = gpu
         }
-        let groups = MenuBarItem.Domain.allCases.compactMap { domain -> (symbol: String, text: String)? in
+        let groups = MenuBarItem.Domain.allCases.compactMap { domain -> (symbol: String?, text: String)? in
             let texts = MenuBarItem.allCases
                 .filter { $0.domain == domain && settings.menuBarItems.contains($0) }
                 .compactMap { $0.text(snapshot) }
@@ -108,15 +116,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // 横向只占一行的宽度。
         let stackedFont = NSFont.monospacedSystemFont(ofSize: 10, weight: .medium)
         let symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 11, weight: .medium)
-        let iconTextGap: CGFloat = 3
-        let segmentGap: CGFloat = 8
+        let iconTextGap: CGFloat = 6
+        let iconBoxWidth: CGFloat = 18
+        let segmentGap: CGFloat = 10
         let texts = groups.map(\.text)
         let stackedLineHeight: CGFloat = 10.5
 
-        func attributes(for text: String, color: NSColor? = nil) -> [NSAttributedString.Key: Any] {
+        func attributes(for text: String, color: NSColor? = nil,
+                        alignment: NSTextAlignment) -> [NSAttributedString.Key: Any] {
             let stacked = text.contains("\n")
             let paragraph = NSMutableParagraphStyle()
             paragraph.lineBreakMode = .byClipping
+            paragraph.alignment = alignment
             if stacked {
                 paragraph.minimumLineHeight = stackedLineHeight
                 paragraph.maximumLineHeight = stackedLineHeight
@@ -129,31 +140,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return result
         }
 
-        func measured(_ text: String) -> NSSize {
+        func measured(_ text: String, alignment: NSTextAlignment) -> NSSize {
             if !text.contains("\n") {
-                let size = (text as NSString).size(withAttributes: attributes(for: text))
+                let size = (text as NSString).size(
+                    withAttributes: attributes(for: text, alignment: alignment))
                 return NSSize(width: ceil(size.width), height: ceil(size.height))
             }
             let size = (text as NSString).boundingRect(
                 with: NSSize(width: 1_000, height: 1_000),
                 options: [.usesLineFragmentOrigin, .usesFontLeading],
-                attributes: attributes(for: text)).size
+                attributes: attributes(for: text, alignment: alignment)).size
             return NSSize(width: ceil(size.width), height: ceil(size.height))
         }
 
         var widths: [CGFloat] = []
-        var glyphWidths: [CGFloat] = []
         var textSizes: [NSSize] = []
         var total: CGFloat = 0
         for (index, group) in groups.enumerated() {
-            let glyph = NSImage(systemSymbolName: group.symbol, accessibilityDescription: nil)?
-                .withSymbolConfiguration(symbolConfiguration)
-            let glyphWidth = glyph?.size.width ?? 0
-            let textSize = measured(texts[index])
-            glyphWidths.append(glyphWidth)
+            let hasIcon = group.symbol != nil
+            let textSize = measured(texts[index], alignment: hasIcon ? .right : .left)
             textSizes.append(textSize)
-            widths.append(glyphWidth + iconTextGap + textSize.width)
-            total += glyphWidth + iconTextGap + textSize.width
+            let width = (hasIcon ? iconBoxWidth + iconTextGap : 0) + textSize.width
+            widths.append(width)
+            total += width
         }
         total += segmentGap * CGFloat(groups.count - 1)
         let height: CGFloat = 22
@@ -163,24 +172,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let tinted = NSImage.SymbolConfiguration(paletteColors: [color])
             var x = rect.minX
             for (index, group) in groups.enumerated() {
-                if let glyph = NSImage(systemSymbolName: group.symbol, accessibilityDescription: nil)?
-                    .withSymbolConfiguration(symbolConfiguration)?
-                    .withSymbolConfiguration(tinted) {
+                if let symbol = group.symbol,
+                   let glyph = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?
+                       .withSymbolConfiguration(symbolConfiguration)?
+                       .withSymbolConfiguration(tinted) {
                     let size = glyph.size
-                    glyph.draw(in: NSRect(x: x, y: (rect.height - size.height) / 2,
+                    glyph.draw(in: NSRect(x: x + (iconBoxWidth - size.width) / 2,
+                                          y: (rect.height - size.height) / 2,
                                           width: size.width, height: size.height))
                 }
                 let text = texts[index] as NSString
                 let textSize = textSizes[index]
-                let textRect = NSRect(x: x + glyphWidths[index] + iconTextGap,
+                let alignment: NSTextAlignment = group.symbol == nil ? .left : .right
+                let textRect = NSRect(x: x + (group.symbol == nil ? 0 : iconBoxWidth + iconTextGap),
                                       y: (rect.height - textSize.height) / 2,
                                       width: textSize.width, height: textSize.height)
                 if texts[index].contains("\n") {
                     text.draw(with: textRect, options: [.usesLineFragmentOrigin, .usesFontLeading],
-                              attributes: attributes(for: texts[index], color: color))
+                              attributes: attributes(for: texts[index], color: color,
+                                                     alignment: alignment))
                 } else {
                     text.draw(at: NSPoint(x: textRect.minX, y: textRect.minY),
-                              withAttributes: attributes(for: texts[index], color: color))
+                              withAttributes: attributes(for: texts[index], color: color,
+                                                         alignment: alignment))
                 }
                 x += widths[index] + segmentGap
             }
@@ -209,7 +223,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func showSettings() {
         if settingsWindowController == nil {
-            settingsWindowController = SettingsWindowController(settings: settings, monitor: monitor)
+            settingsWindowController = SettingsWindowController(settings: settings,
+                                                                monitor: monitor,
+                                                                updater: updater)
         }
         settingsWindowController?.present()
     }
@@ -235,6 +251,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             menu.addItem(entry)
         }
         menu.addItem(.separator())
+        let updates = NSMenuItem(title: L10n.t("menu.checkUpdates"),
+                                 action: #selector(checkForUpdates), keyEquivalent: "")
+        updates.target = self
+        menu.addItem(updates)
+        menu.addItem(.separator())
         let quit = NSMenuItem(title: L10n.format("menu.quit", AppInfo.displayName), action: #selector(quit), keyEquivalent: "q")
         quit.target = self
         menu.addItem(quit)
@@ -251,6 +272,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             settings.menuBarItems.insert(item)
         }
+    }
+
+    @objc private func checkForUpdates() {
+        showSettings()
+        Task { await updater.check() }
     }
 
     @objc private func quit() {

@@ -10,10 +10,11 @@ extension Notification.Name {
 /// manually hosted view, and a menu bar app has no app menu to reach the scene.
 @MainActor
 final class SettingsWindowController: NSWindowController {
-    init(settings: AppSettings, monitor: HardwareMonitor) {
+    init(settings: AppSettings, monitor: HardwareMonitor, updater: UpdateController) {
         let root = SettingsView()
             .environmentObject(settings)
             .environmentObject(monitor)
+            .environmentObject(updater)
         let hosting = NSHostingController(rootView: root)
         let window = NSWindow(contentViewController: hosting)
         window.title = L10n.t("settings.window.title")
@@ -47,6 +48,8 @@ struct SettingsView: View {
                 .tabItem { Label(L10n.t("settings.tab.fans"), systemImage: "fanblades") }
             MenuBarSettings()
                 .tabItem { Label(L10n.t("settings.tab.menuBar"), systemImage: "menubar.rectangle") }
+            UpdateSettings()
+                .tabItem { Label(L10n.t("settings.tab.updates"), systemImage: "arrow.triangle.2.circlepath") }
         }
     }
 }
@@ -179,5 +182,77 @@ private struct MenuBarSettings: View {
         }
         .formStyle(.grouped)
         .padding(20)
+    }
+}
+
+private struct UpdateSettings: View {
+    @EnvironmentObject private var settings: AppSettings
+    @EnvironmentObject private var updater: UpdateController
+
+    private var lastCheckText: String {
+        guard let last = updater.lastCheck else { return L10n.t("update.never") }
+        return L10n.format("update.lastCheck",
+                           last.formatted(date: .abbreviated, time: .shortened))
+    }
+
+    var body: some View {
+        Form {
+            Section(L10n.t("update.section")) {
+                LabeledContent {
+                    Text(updater.currentVersion)
+                } label: {
+                    Text(L10n.t("update.currentVersion"))
+                }
+                Toggle(L10n.t("update.autoCheck"), isOn: $settings.autoCheckUpdates)
+                Toggle(L10n.t("update.autoInstall"), isOn: $settings.autoInstallUpdates)
+                    .disabled(!settings.autoCheckUpdates)
+                HStack {
+                    Button(L10n.t("update.check")) {
+                        Task { await updater.check() }
+                    }
+                    .disabled(updater.isBusy)
+                    Spacer()
+                    Text(lastCheckText).foregroundStyle(.secondary)
+                }
+                status
+            }
+        }
+        .formStyle(.grouped)
+        .padding(20)
+    }
+
+    @ViewBuilder private var status: some View {
+        switch updater.state {
+        case .idle:
+            EmptyView()
+        case .checking:
+            Text(L10n.t("update.checking")).foregroundStyle(.secondary)
+        case .upToDate:
+            Text(L10n.t("update.upToDate")).foregroundStyle(.secondary)
+        case .available(let info):
+            VStack(alignment: .leading, spacing: 8) {
+                Text(L10n.format("update.available", info.version))
+                HStack {
+                    Button(L10n.t("update.install")) {
+                        Task { await updater.installAvailable() }
+                    }
+                    Button(L10n.t("update.openPage")) {
+                        NSWorkspace.shared.open(info.pageURL)
+                    }
+                }
+            }
+        case .downloading:
+            HStack(spacing: 8) {
+                ProgressView()
+                Text(L10n.t("update.downloading")).foregroundStyle(.secondary)
+            }
+        case .installing:
+            HStack(spacing: 8) {
+                ProgressView()
+                Text(L10n.t("update.installing")).foregroundStyle(.secondary)
+            }
+        case .failed(let message):
+            Text(message).foregroundStyle(.red).textSelection(.enabled)
+        }
     }
 }

@@ -18,12 +18,14 @@ enum MenuBarItem: String, CaseIterable, Identifiable {
     enum Domain: CaseIterable {
         case cpu, gpu, memory, net
 
-        var symbol: String {
+        /// 网络组不画图标：上下箭头本身已经表达方向和吞吐，去掉后能省下
+        /// 一整列图标宽度。
+        var symbol: String? {
             switch self {
             case .cpu: "cpu"
             case .gpu: "display"
             case .memory: "memorychip"
-            case .net: "network"
+            case .net: nil
             }
         }
     }
@@ -83,8 +85,8 @@ enum MenuBarItem: String, CaseIterable, Identifiable {
     private static func rate(_ bytesPerSecond: Double) -> String {
         let rate = Num.bitRate(bytesPerSecond)
         let body = rate.value >= 9.95
-            ? String(format: "%.0f", rate.value)
-            : String(format: "%.1f", rate.value)
+            ? String(format: "%3.0f", rate.value)
+            : String(format: "%3.1f", rate.value)
         return body + String(rate.unit.prefix(1))
     }
 }

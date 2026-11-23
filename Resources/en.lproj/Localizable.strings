@@ -96,3 +96,30 @@
 "temp.memory.channel" = "Memory %@";
 "temp.powerStage" = "Power Stage";
 "temp.driveBay" = "Drive Bay";
+
+/* Updates */
+"settings.tab.updates" = "Updates";
+"menu.checkUpdates" = "Check for Updates…";
+"update.section" = "Updates";
+"update.currentVersion" = "Current Version";
+"update.autoCheck" = "Check for updates automatically (daily)";
+"update.autoInstall" = "Download and install automatically";
+"update.check" = "Check for Updates";
+"update.checking" = "Checking for updates…";
+"update.upToDate" = "You’re up to date";
+"update.available" = "Version %@ is available";
+"update.install" = "Download and Install";
+"update.openPage" = "Open Release Page";
+"update.downloading" = "Downloading and verifying…";
+"update.installing" = "Installing; the app will restart…";
+"update.lastCheck" = "Last checked: %@";
+"update.never" = "Never checked";
+"update.error.server" = "The update server returned an error (HTTP %ld)";
+"update.error.noRelease" = "No stable release is available";
+"update.error.noAsset" = "This release has no build for the current architecture";
+"update.error.checksum" = "The download failed verification; installation was canceled";
+"update.error.missingChecksum" = "This release has no SHA256 digest, so automatic installation was canceled";
+"update.error.invalidBundle" = "The downloaded app bundle is invalid or has the wrong version";
+"update.error.notInstalled" = "The app is not running from an installed .app bundle";
+"update.error.notWritable" = "No permission to write to the app folder; please download the update manually";
+"update.error.command" = "An update command failed";

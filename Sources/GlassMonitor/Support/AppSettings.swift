@@ -53,6 +53,12 @@ final class AppSettings: ObservableObject {
     @Published var curveMinutes: Double {
         didSet { Self.defaults.set(curveMinutes, forKey: "curveMinutes") }
     }
+    @Published var autoCheckUpdates: Bool {
+        didSet { Self.defaults.set(autoCheckUpdates, forKey: "autoCheckUpdates") }
+    }
+    @Published var autoInstallUpdates: Bool {
+        didSet { Self.defaults.set(autoInstallUpdates, forKey: "autoInstallUpdates") }
+    }
     @Published var menuBarItems: Set<MenuBarItem> {
         didSet { Self.defaults.set(menuBarItems.map(\.rawValue), forKey: "menuBarItems") }
     }
@@ -84,6 +90,8 @@ final class AppSettings: ObservableObject {
         interval = Self.defaults.object(forKey: "interval") as? Double ?? 2
         showsPerCore = Self.defaults.object(forKey: "showsPerCore") as? Bool ?? true
         curveMinutes = Self.defaults.object(forKey: "curveMinutes") as? Double ?? 5
+        autoCheckUpdates = Self.defaults.object(forKey: "autoCheckUpdates") as? Bool ?? true
+        autoInstallUpdates = Self.defaults.object(forKey: "autoInstallUpdates") as? Bool ?? false
         cpuFanChannel = Self.defaults.string(forKey: "cpuFanChannel")
         headerFansAuto = Self.defaults.object(forKey: "headerFansAuto") as? Bool ?? true
         headerFanChannels = Set(Self.defaults.array(forKey: "headerFanChannels") as? [String] ?? [])
