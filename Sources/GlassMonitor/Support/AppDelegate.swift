@@ -89,7 +89,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 .filter { $0.domain == domain && settings.menuBarItems.contains($0) }
                 .compactMap { $0.text(snapshot) }
             guard !texts.isEmpty else { return nil }
-            return (domain.symbol, texts.joined(separator: " "))
+            // 同一硬件域的温度/占用也上下排列，横向只按最长的一项占宽。
+            return (domain.symbol, texts.joined(separator: "\n"))
         }
         button.title = ""
         button.imagePosition = .imageOnly
@@ -103,23 +104,56 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let font = NSFont.monospacedSystemFont(ofSize: 11, weight: .medium)
-        let attributes: [NSAttributedString.Key: Any] = [.font: font]
+        // 网速上下行拆成两行：10 pt 配合紧凑行距刚好落在 22 pt 状态栏内，
+        // 横向只占一行的宽度。
+        let stackedFont = NSFont.monospacedSystemFont(ofSize: 10, weight: .medium)
         let symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 11, weight: .medium)
         let iconTextGap: CGFloat = 3
         let segmentGap: CGFloat = 8
         let texts = groups.map(\.text)
+        let stackedLineHeight: CGFloat = 10.5
+
+        func attributes(for text: String, color: NSColor? = nil) -> [NSAttributedString.Key: Any] {
+            let stacked = text.contains("\n")
+            let paragraph = NSMutableParagraphStyle()
+            paragraph.lineBreakMode = .byClipping
+            if stacked {
+                paragraph.minimumLineHeight = stackedLineHeight
+                paragraph.maximumLineHeight = stackedLineHeight
+            }
+            var result: [NSAttributedString.Key: Any] = [
+                .font: stacked ? stackedFont : font,
+                .paragraphStyle: paragraph,
+            ]
+            if let color { result[.foregroundColor] = color }
+            return result
+        }
+
+        func measured(_ text: String) -> NSSize {
+            if !text.contains("\n") {
+                let size = (text as NSString).size(withAttributes: attributes(for: text))
+                return NSSize(width: ceil(size.width), height: ceil(size.height))
+            }
+            let size = (text as NSString).boundingRect(
+                with: NSSize(width: 1_000, height: 1_000),
+                options: [.usesLineFragmentOrigin, .usesFontLeading],
+                attributes: attributes(for: text)).size
+            return NSSize(width: ceil(size.width), height: ceil(size.height))
+        }
 
         var widths: [CGFloat] = []
         var glyphWidths: [CGFloat] = []
+        var textSizes: [NSSize] = []
         var total: CGFloat = 0
         for (index, group) in groups.enumerated() {
             let glyph = NSImage(systemSymbolName: group.symbol, accessibilityDescription: nil)?
                 .withSymbolConfiguration(symbolConfiguration)
             let glyphWidth = glyph?.size.width ?? 0
-            let textWidth = ceil((texts[index] as NSString).size(withAttributes: attributes).width)
+            let textSize = measured(texts[index])
             glyphWidths.append(glyphWidth)
-            widths.append(glyphWidth + iconTextGap + textWidth)
-            total += glyphWidth + iconTextGap + textWidth
+            textSizes.append(textSize)
+            widths.append(glyphWidth + iconTextGap + textSize.width)
+            total += glyphWidth + iconTextGap + textSize.width
         }
         total += segmentGap * CGFloat(groups.count - 1)
         let height: CGFloat = 22
@@ -137,10 +171,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                                           width: size.width, height: size.height))
                 }
                 let text = texts[index] as NSString
-                let textSize = text.size(withAttributes: [.font: font, .foregroundColor: color])
-                text.draw(at: NSPoint(x: x + glyphWidths[index] + iconTextGap,
-                                      y: (rect.height - textSize.height) / 2),
-                          withAttributes: [.font: font, .foregroundColor: color])
+                let textSize = textSizes[index]
+                let textRect = NSRect(x: x + glyphWidths[index] + iconTextGap,
+                                      y: (rect.height - textSize.height) / 2,
+                                      width: textSize.width, height: textSize.height)
+                if texts[index].contains("\n") {
+                    text.draw(with: textRect, options: [.usesLineFragmentOrigin, .usesFontLeading],
+                              attributes: attributes(for: texts[index], color: color))
+                } else {
+                    text.draw(at: NSPoint(x: textRect.minX, y: textRect.minY),
+                              withAttributes: attributes(for: texts[index], color: color))
+                }
                 x += widths[index] + segmentGap
             }
             return true

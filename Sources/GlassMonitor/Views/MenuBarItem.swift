@@ -66,7 +66,7 @@ enum MenuBarItem: String, CaseIterable, Identifiable {
         case .memory:
             return String(format: "%3.0f%%", snapshot.memory.pressurePercent)
         case .net:
-            return "↓\(Self.rate(snapshot.network.downloadBps)) ↑\(Self.rate(snapshot.network.uploadBps))"
+            return "↓\(Self.rate(snapshot.network.downloadBps))\n↑\(Self.rate(snapshot.network.uploadBps))"
         }
     }
 
@@ -83,8 +83,8 @@ enum MenuBarItem: String, CaseIterable, Identifiable {
     private static func rate(_ bytesPerSecond: Double) -> String {
         let rate = Num.bitRate(bytesPerSecond)
         let body = rate.value >= 9.95
-            ? String(format: "%3.0f", rate.value)
-            : String(format: "%3.1f", rate.value)
+            ? String(format: "%.0f", rate.value)
+            : String(format: "%.1f", rate.value)
         return body + String(rate.unit.prefix(1))
     }
 }
