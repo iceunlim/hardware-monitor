@@ -97,10 +97,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 .filter { $0.domain == domain && settings.menuBarItems.contains($0) }
                 .compactMap { $0.text(snapshot) }
             guard !texts.isEmpty else { return nil }
-            // 只有网络的上下行拆成两行；CPU/GPU 的温度和占用保持单行，
-            // 否则两列短行看起来比横排更零碎。
-            let separator = domain == .net ? "\n" : " "
-            return (domain.symbol, texts.joined(separator: separator))
+            // 同一域内的读数并排单行；网络不再换行，也不再画重复的图标。
+            return (domain.symbol, texts.joined(separator: " "))
         }
         button.title = ""
         button.imagePosition = .imageOnly
@@ -114,44 +112,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let font = NSFont.monospacedSystemFont(ofSize: 11, weight: .medium)
-        // 网速上下行拆成两行：10 pt 配合紧凑行距刚好落在 22 pt 状态栏内，
-        // 横向只占一行的宽度。
-        let stackedFont = NSFont.monospacedSystemFont(ofSize: 10, weight: .medium)
         let symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 11, weight: .medium)
         let iconTextGap: CGFloat = 6
         let iconBoxWidth: CGFloat = 18
         let segmentGap: CGFloat = 10
         let texts = groups.map(\.text)
-        let stackedLineHeight: CGFloat = 10.5
 
-        func attributes(for text: String, color: NSColor? = nil,
-                        alignment: NSTextAlignment) -> [NSAttributedString.Key: Any] {
-            let stacked = text.contains("\n")
-            let paragraph = NSMutableParagraphStyle()
-            paragraph.lineBreakMode = .byClipping
-            paragraph.alignment = alignment
-            if stacked {
-                paragraph.minimumLineHeight = stackedLineHeight
-                paragraph.maximumLineHeight = stackedLineHeight
-            }
-            var result: [NSAttributedString.Key: Any] = [
-                .font: stacked ? stackedFont : font,
-                .paragraphStyle: paragraph,
-            ]
+        func attributes(for color: NSColor? = nil) -> [NSAttributedString.Key: Any] {
+            var result: [NSAttributedString.Key: Any] = [.font: font]
             if let color { result[.foregroundColor] = color }
             return result
         }
 
-        func measured(_ text: String, alignment: NSTextAlignment) -> NSSize {
-            if !text.contains("\n") {
-                let size = (text as NSString).size(
-                    withAttributes: attributes(for: text, alignment: alignment))
-                return NSSize(width: ceil(size.width), height: ceil(size.height))
-            }
-            let size = (text as NSString).boundingRect(
-                with: NSSize(width: 1_000, height: 1_000),
-                options: [.usesLineFragmentOrigin, .usesFontLeading],
-                attributes: attributes(for: text, alignment: alignment)).size
+        func measured(_ text: String) -> NSSize {
+            let size = (text as NSString).size(withAttributes: attributes())
             return NSSize(width: ceil(size.width), height: ceil(size.height))
         }
 
@@ -160,7 +134,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         var total: CGFloat = 0
         for (index, group) in groups.enumerated() {
             let hasIcon = group.symbol != nil
-            let textSize = measured(texts[index], alignment: hasIcon ? .right : .left)
+            let textSize = measured(texts[index])
             textSizes.append(textSize)
             let width = (hasIcon ? iconBoxWidth + iconTextGap : 0) + textSize.width
             widths.append(width)
@@ -185,19 +159,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
                 let text = texts[index] as NSString
                 let textSize = textSizes[index]
-                let alignment: NSTextAlignment = group.symbol == nil ? .left : .right
-                let textRect = NSRect(x: x + (group.symbol == nil ? 0 : iconBoxWidth + iconTextGap),
-                                      y: (rect.height - textSize.height) / 2,
-                                      width: textSize.width, height: textSize.height)
-                if texts[index].contains("\n") {
-                    text.draw(with: textRect, options: [.usesLineFragmentOrigin, .usesFontLeading],
-                              attributes: attributes(for: texts[index], color: color,
-                                                     alignment: alignment))
-                } else {
-                    text.draw(at: NSPoint(x: textRect.minX, y: textRect.minY),
-                              withAttributes: attributes(for: texts[index], color: color,
-                                                         alignment: alignment))
-                }
+                let textOrigin = NSPoint(x: x + (group.symbol == nil ? 0 : iconBoxWidth + iconTextGap),
+                                         y: (rect.height - textSize.height) / 2)
+                text.draw(at: textOrigin, withAttributes: attributes(for: color))
                 x += widths[index] + segmentGap
             }
             return true

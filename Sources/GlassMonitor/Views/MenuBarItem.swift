@@ -68,7 +68,7 @@ enum MenuBarItem: String, CaseIterable, Identifiable {
         case .memory:
             return String(format: "%3.0f%%", snapshot.memory.pressurePercent)
         case .net:
-            return "↓\(Self.rate(snapshot.network.downloadBps))\n↑\(Self.rate(snapshot.network.uploadBps))"
+            return "↓\(Self.rate(snapshot.network.downloadBps)) ↑\(Self.rate(snapshot.network.uploadBps))"
         }
     }
 
