@@ -50,7 +50,9 @@ enum MenuBarItem: String, CaseIterable, Identifiable {
 
     /// Fixed-character tokens so the status item never changes width as values
     /// move — a jittering menu bar pushes every neighbouring icon around.
-    func text(_ snapshot: SystemSnapshot) -> String {
+    /// Returns nil for a metric the hardware does not publish, so the caller can
+    /// omit the readout instead of showing a fabricated zero.
+    func text(_ snapshot: SystemSnapshot) -> String? {
         switch self {
         case .cpuTemp:
             return Self.degrees(snapshot.cpu.temperatureC)
@@ -59,30 +61,25 @@ enum MenuBarItem: String, CaseIterable, Identifiable {
         case .cpuLoad:
             return String(format: "%3.0f%%", snapshot.cpu.totalUsage)
         case .gpuLoad:
-            return String(format: "%3.0f%%", snapshot.gpu.utilization ?? 0)
+            guard let utilization = snapshot.gpu.utilization else { return nil }
+            return String(format: "%3.0f%%", utilization)
         case .memory:
             return String(format: "%3.0f%%", snapshot.memory.pressurePercent)
         case .net:
-            return "↓\(Self.rate(snapshot.network.downloadBps)) ↑\(Self.rate(snapshot.network.uploadBps))"
+            return "↓ \(Self.rate(snapshot.network.downloadBps)) ↑ \(Self.rate(snapshot.network.uploadBps))"
         }
     }
 
-    /// Units keep the same one-space policy as the cards; percentages stay
-    /// attached (`35 °C` but `53%`).
+    /// Same one-decimal precision as the cards, padded to a stable width.
     private static func degrees(_ value: Double?) -> String {
-        guard let value else { return " -- °C" }
-        return String(format: "%3.0f °C", value)
+        guard let value else { return "  -- °C" }
+        return String(format: "%4.1f °C", value)
     }
 
-    /// Fixed width: the value and its unit letter. The separator is part of
-    /// the token so the status item never jumps as traffic changes.
+    /// Bit/s at 1000-based units, the same `Num.fixedRate` the network card
+    /// uses — a byte/binary rendering here made the two readouts differ by 8x.
     private static func rate(_ bytesPerSecond: Double) -> String {
-        let units: [(Double, String)] = [(1_073_741_824, "G"), (1_048_576, "M"), (1024, "K")]
-        for (scale, suffix) in units where bytesPerSecond >= scale {
-            let value = bytesPerSecond / scale
-            let body = value >= 9.95 ? String(format: "%3.0f", value) : String(format: "%3.1f", value)
-            return body + " " + suffix
-        }
-        return String(format: "%3.1f K", bytesPerSecond / 1024)
+        let rate = Num.fixedRate(bytesPerSecond)
+        return "\(rate.value) \(rate.unit)"
     }
 }

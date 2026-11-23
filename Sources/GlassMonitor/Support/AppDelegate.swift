@@ -87,7 +87,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let groups = MenuBarItem.Domain.allCases.compactMap { domain -> (symbol: String, text: String)? in
             let texts = MenuBarItem.allCases
                 .filter { $0.domain == domain && settings.menuBarItems.contains($0) }
-                .map { $0.text(snapshot) }
+                .compactMap { $0.text(snapshot) }
             guard !texts.isEmpty else { return nil }
             return (domain.symbol, texts.joined(separator: " "))
         }
