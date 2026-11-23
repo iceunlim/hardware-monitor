@@ -60,3 +60,59 @@ jobs:
           name: GlassMonitor-${{ steps.version.outputs.version }}-${{ matrix.arch }}
           path: build/GlassMonitor-${{ steps.version.outputs.version }}-${{ matrix.arch }}.zip
           if-no-files-found: error
+
+  release:
+    # 只有 main 的 push 才发布；版本号对应的 tag 不存在时自动创建 tag + Release。
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: release-main
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read version
+        id: version
+        run: echo "version=$(tr -d '[:space:]' < VERSION)" >> "$GITHUB_OUTPUT"
+
+      - name: Check tag
+        id: tag
+        run: |
+          tag="v${{ steps.version.outputs.version }}"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "tag $tag already exists, skip release" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download artifacts
+        if: steps.tag.outputs.exists == 'false'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: GlassMonitor-*
+          path: artifacts
+
+      - name: Create release
+        if: steps.tag.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.tag.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          for dir in artifacts/GlassMonitor-*; do
+            cp "$dir"/*.zip dist/
+          done
+          ls -l dist
+          gh release create "$TAG" dist/*.zip \
+            --target "$GITHUB_SHA" \
+            --title "GlassMonitor $VERSION" \
+            --generate-notes
