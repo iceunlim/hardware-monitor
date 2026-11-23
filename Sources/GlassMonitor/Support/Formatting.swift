@@ -41,9 +41,13 @@ enum Num {
     }
 
     /// Base clock, plus the firmware turbo ceiling when one is declared —
-    /// e.g. `3.70~4.70 GHz`. Without a ceiling only the base clock is shown.
+    /// e.g. `3.70~4.70 GHz`. Without a ceiling only the base clock is shown;
+    /// with neither (Apple Silicon) the caller hides the label entirely.
     static func frequencyRange(base: Double?, ceiling: Double?) -> String {
-        guard let base, base > 0 else { return gigahertz(ceiling) }
+        guard let base, base > 0 else {
+            guard let ceiling, ceiling > 0 else { return "" }
+            return gigahertz(ceiling)
+        }
         if let ceiling, ceiling > base + 0.05 {
             return String(format: "%.2f~%.2f GHz", base, ceiling)
         }

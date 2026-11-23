@@ -24,7 +24,10 @@ struct CPUCard: View {
                     MetricRow(label: L10n.t("metric.temperature"), value: Num.celsius(snapshot.cpuTemperature))
                     MetricRow(label: L10n.t("cpu.busiestCore"),
                               value: "\(Num.percent(cores.map(\.usage).max() ?? 0))%")
-                    MetricRow(label: L10n.t("metric.fan"), value: coolerText)
+                    // 无风扇机型（MacBook Air、部分无风扇迷你主机）不占一行 “—”。
+                    if coolerFan != nil {
+                        MetricRow(label: L10n.t("metric.fan"), value: coolerText)
+                    }
                 }
                 Spacer(minLength: 0)
             }
@@ -41,11 +44,13 @@ struct CPUCard: View {
                     MiniLegend(color: Accent.thermal,
                                text: L10n.format("legend.temperature", Num.degrees(snapshot.cpuTemperature)))
                     Spacer(minLength: 4)
-                    Text(Num.frequencyRange(base: snapshot.cpu.frequencyGHz, ceiling: snapshot.cpu.turboGHz))
-                        .font(.mono(TypeScale.caption))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
+                    if !frequencyText.isEmpty {
+                        Text(frequencyText)
+                            .font(.mono(TypeScale.caption))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                    }
                 }
                 DualSparkline(usage: history, temperature: tempHistory, usageColor: Accent.cpu)
                     .frame(height: 30)
@@ -59,6 +64,12 @@ struct CPUCard: View {
         guard let coolerFan else { return "—" }
         let rpm = coolerFan.currentRPM ?? 0
         return rpm > 0 ? "\(Int(rpm.rounded())) RPM" : L10n.t("fan.stopped")
+    }
+
+    /// Apple Silicon 不发布基础频率，也没有固件 P-State 表；两个值都缺失时
+    /// 留空，而不是在卡片角落固定显示一个 “—”。
+    private var frequencyText: String {
+        Num.frequencyRange(base: snapshot.cpu.frequencyGHz, ceiling: snapshot.cpu.turboGHz)
     }
 }
 

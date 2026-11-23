@@ -88,6 +88,7 @@
 "temp.memory" = "内存";
 "temp.battery" = "电池";
 "temp.wireless" = "无线模块";
+"temp.charger" = "充电器近端";
 "temp.core" = "核心 %ld";
 "temp.cpu.channel" = "CPU %@";
 "temp.gpu.channel" = "GPU %@";

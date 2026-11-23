@@ -8,7 +8,8 @@ import IOKit
 /// counters — which is readable without root. That covers Intel, AMD and
 /// Apple Silicon GPUs, including the `AMDRadeonX6000` driver most
 /// Hackintoshes rely on, so no `powermetrics` helper or privileged listener is
-/// needed.
+/// needed. Apple Silicon's AGX drivers only publish utilisation and memory
+/// counters; temperature there comes from the SMC instead.
 ///
 /// Each accelerator belongs to exactly one physical GPU, and a machine can
 /// expose several (an iGPU next to a dGPU). Readings are therefore taken per
@@ -90,12 +91,16 @@ public final class GPUSampler {
             if snapshot.isIntegrated {
                 // 核显没有独立 VRAM，但会从系统内存映射共享区域。inUseSysMemoryBytes
                 // 偶尔下溢成天文数字（睡眠唤醒后见过），超出 GART 容量时丢弃，
-                // 退回到始终自洽的 GART 已用量。
+                // 退回到始终自洽的 GART 已用量。Apple Silicon 的 AGX 不发布
+                // GART 计数，只给出 “In use system memory”。
                 let limit = number(statistics["gartSizeBytes"]) ?? 1e12
                 let inUse = number(statistics["inUseSysMemoryBytes"]).flatMap {
                     $0 >= 0 && $0 <= limit ? $0 : nil
                 }
-                snapshot.sharedMemoryBytes = inUse ?? number(statistics["gartUsedBytes"])
+                snapshot.sharedMemoryBytes = inUse
+                    ?? number(statistics["gartUsedBytes"])
+                    ?? number(statistics["In use system memory"]).flatMap { $0 >= 0 ? $0 : nil }
+                    ?? number(statistics["In use system memory (driver)"]).flatMap { $0 >= 0 ? $0 : nil }
             }
 
             snapshot.isSupported = true
@@ -134,6 +139,16 @@ public final class GPUSampler {
         var serviceID: UInt64 = 0
         IORegistryEntryGetRegistryEntryID(service, &serviceID)
         let fallbackID = "gpu-\(serviceID)"
+
+        // Apple Silicon 的 AGX 加速器没有 PCI 父节点，`model` 与 `vendor-id`
+        // 直接挂在加速器节点上；不取这里，卡片标题就只剩一个 “GPU”。
+        if isAppleSilicon {
+            let ownVendor = vendorName(property(service, "vendor-id")) ?? "Apple"
+            if let model = string(property(service, "model")) {
+                let name = model.lowercased().contains("gpu") ? model : "\(model) GPU"
+                return (fallbackID, name, ownVendor)
+            }
+        }
 
         var entry = service
         IOObjectRetain(entry)
@@ -220,6 +235,16 @@ public final class GPUSampler {
     private static func property(_ service: io_registry_entry_t, _ name: String) -> Any? {
         IORegistryEntryCreateCFProperty(service, name as CFString, kCFAllocatorDefault, 0)?
             .takeRetainedValue()
+    }
+
+    /// IORegistry 里的字符串可能是 CFString，也可能是带尾部空字节的 Data。
+    private static func string(_ value: Any?) -> String? {
+        if let string = value as? String, !string.isEmpty { return string }
+        if let data = value as? Data, let decoded = String(data: data, encoding: .ascii) {
+            let trimmed = decoded.trimmingCharacters(in: .controlCharacters)
+            return trimmed.isEmpty ? nil : trimmed
+        }
+        return nil
     }
 
     private static func number(_ value: Any?) -> Double? {

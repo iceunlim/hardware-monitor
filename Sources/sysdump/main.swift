@@ -41,6 +41,13 @@ for tick in 1...3 {
     gpuSnaps = gpu.readAll()
     netSnap = network.read()
 
+    // 与 HardwareMonitor 一致：加速器不发布的温度由 SMC 通道补齐。
+    let liveTemps = temperatures.read()
+    cpuSnap.temperatureC = liveTemps.first { $0.group == .cpu }?.celsius ?? cpuSnap.temperatureC
+    for index in gpuSnaps.indices where gpuSnaps[index].temperatureC == nil {
+        gpuSnaps[index].temperatureC = liveTemps.first { $0.group == .gpu }?.celsius
+    }
+
     print("""
 
     tick \(tick)

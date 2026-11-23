@@ -6,11 +6,17 @@ import Foundation
 /// Hackintosh the set is defined by whatever SMCSuperIO/SMCRadeonSensors
 /// plug-in is loaded. Rather than hard-coding, the whole key space is scanned
 /// once at startup and the numeric `T*` keys are labelled against Intel's
-/// naming convention.
+/// naming convention. Apple Silicon publishes the same kind of `flt` keys with
+/// its own names (`TCMb`/`TCMz`, `Tg0*`, `Tp*`/`Te*`), which are mapped only on
+/// that platform.
 public final class TemperatureReader {
     private let smc = SMCClient.shared
     private var keys: [(key: String, label: String, group: TemperatureSample.Group, rank: Int)] = []
     private var didDiscover = false
+
+    /// Apple Silicon 的 SMC 键名与 Intel 明显不同；只有在该平台才启用
+    /// TCM* / Tp* / Te* 映射，避免把 Intel 上同名的其它通道误当成 CPU。
+    private static let isAppleSilicon = CPUSampler.intSysctl("hw.optional.arm64") == 1
 
     public init() {}
 
@@ -94,6 +100,13 @@ public final class TemperatureReader {
         case "TC0D", "TC0E", "TC0F", "TC0H": return (String(localized: "temp.cpu.core", defaultValue: "CPU Core"), .cpu, 1)
         case "TCXC": return (String(localized: "temp.cpu.hotspot", defaultValue: "CPU Hotspot"), .cpu, 1)
         case "TCAD", "TC0A": return (String(localized: "temp.cpu.aux", defaultValue: "CPU Aux"), .cpu, 3)
+        // Apple Silicon：TCMb 是整颗 CPU die 的平均温度，TCMz 是最热传感器；
+        // TCHP 是充电器/机身近端温度，不能当成 CPU 温度（Intel 上同理）。
+        case "TCMB" where Self.isAppleSilicon:
+            return (String(localized: "temp.cpu.package", defaultValue: "CPU Package"), .cpu, 0)
+        case "TCMZ" where Self.isAppleSilicon:
+            return (String(localized: "temp.cpu.hotspot", defaultValue: "CPU Hotspot"), .cpu, 1)
+        case "TCHP": return (String(localized: "temp.charger", defaultValue: "Charger Proximity"), .board, 3)
         case "TG0D", "TGDD", "TG0C": return (String(localized: "temp.gpu.core", defaultValue: "GPU Core"), .gpu, 0)
         case "TG0P": return (String(localized: "temp.gpu.proximity", defaultValue: "GPU Proximity"), .gpu, 1)
         case "TG0M", "TG0R", "TG0V": return (String(localized: "temp.gpu.vram", defaultValue: "GPU VRAM"), .gpu, 1)
@@ -112,6 +125,13 @@ public final class TemperatureReader {
         if canonical.count == 4, canonical.hasPrefix("TC"), canonical.hasSuffix("C"),
            let core = Int(canonical.dropFirst(2).dropLast()) {
             return (String(format: String(localized: "temp.core", defaultValue: "Core %ld"), core + 1), .cpu, 2)
+        }
+
+        // Apple Silicon 的 P/E 集群键（Tp01、Te04…）。大小写有意义，不能用
+        // 上面的全大写键名匹配；归入 CPU 域，标签保留原始通道名。
+        if Self.isAppleSilicon, key.count == 4, key.hasPrefix("Tp") || key.hasPrefix("Te") {
+            return (String(format: String(localized: "temp.cpu.channel", defaultValue: "CPU %@"),
+                           String(key.dropFirst(2))), .cpu, 3)
         }
 
         guard canonical.count >= 2 else { return (key, .other, 4) }

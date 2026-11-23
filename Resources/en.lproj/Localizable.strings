@@ -88,6 +88,7 @@
 "temp.memory" = "Memory";
 "temp.battery" = "Battery";
 "temp.wireless" = "Wireless";
+"temp.charger" = "Charger Proximity";
 "temp.core" = "Core %ld";
 "temp.cpu.channel" = "CPU %@";
 "temp.gpu.channel" = "GPU %@";

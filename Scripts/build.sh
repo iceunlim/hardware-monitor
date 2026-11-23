@@ -1,14 +1,32 @@
 #!/bin/bash
-# Command Line Tools only: no Xcode.app, no asset catalog, ad-hoc signing.
+# Plain SwiftPM build: no Xcode project or asset catalog, ad-hoc signing.
 set -euo pipefail
-export DEVELOPER_DIR="${DEVELOPER_DIR:-/Library/Developer/CommandLineTools}"
+
+# SwiftUI 宏插件只随完整 Xcode 提供；只装 Command Line Tools 时 App target
+# 无法编译（Core 与 sysdump 仍可单独构建）。如果系统默认仍是 CLT、但装了
+# Xcode，就自动切到 Xcode；CI 已选好的 Xcode 不会被覆盖。
+if [[ -z "${DEVELOPER_DIR:-}" ]]; then
+  SELECTED="$(xcode-select -p 2>/dev/null || true)"
+  if [[ "$SELECTED" == "/Library/Developer/CommandLineTools" && -d /Applications/Xcode.app/Contents/Developer ]]; then
+    export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+  fi
+fi
+TOOLCHAIN="${DEVELOPER_DIR:-$(xcode-select -p 2>/dev/null || true)}"
+if [[ "$TOOLCHAIN" == "/Library/Developer/CommandLineTools" ]]; then
+  echo "error: GlassMonitor 需要完整 Xcode（SwiftUI 宏不在 Command Line Tools 中）。" >&2
+  echo "       安装 Xcode 后无需改脚本；只想看传感器可用 swift build --product sysdump。" >&2
+  exit 1
+fi
+
 cd "$(dirname "$0")/.."
 
 CONFIG="${1:-release}"
 APP="build/GlassMonitor.app"
 
 swift build -c "$CONFIG"
-BIN=".build/x86_64-apple-macosx/$CONFIG/GlassMonitor"
+# 产物路径随工具链和架构变化（arm64/x86_64、.build/release 或 .build/out/...），
+# 交给 SwiftPM 给出，不能写死。
+BIN="$(swift build -c "$CONFIG" --show-bin-path)/GlassMonitor"
 [[ -x "$BIN" ]] || { echo "missing $BIN" >&2; exit 1; }
 
 rm -rf "$APP"
