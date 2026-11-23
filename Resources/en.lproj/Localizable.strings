@@ -1,0 +1,90 @@
+/* Application */
+"menu.quit" = "Quit %@";
+
+/* Header */
+"header.uptime.justStarted" = "Just started";
+"header.uptime.daysHours" = "Up %1$ldd %2$ldh";
+"header.uptime.hoursMinutes" = "Up %1$ldh %2$ldm";
+"header.uptime.minutes" = "Up %1$ldm";
+
+/* Fans */
+"fan.stopped" = "Stopped";
+"fan.numbered" = "Fan %ld";
+"fan.cpu" = "CPU Fan";
+"fan.system" = "System Fan";
+"fan.pump" = "Pump";
+"fan.aux" = "Aux Fan %ld";
+
+/* Gear menu */
+"menu.headerFans" = "Header Fans";
+"menu.headerFans.auto" = "Auto (running fans only)";
+"menu.noFans" = "No fans detected";
+"menu.cpuFan" = "CPU Card Fan";
+"menu.cpuFan.auto" = "Auto (CPU fan → pump)";
+"menu.menuBar" = "Menu Bar Readouts";
+"menu.chartWindow" = "Chart Window";
+"menu.chartWindow.1m" = "Last 1 min";
+"menu.chartWindow.3m" = "Last 3 min";
+"menu.chartWindow.5m" = "Last 5 min";
+"menu.interval" = "Refresh Interval";
+"menu.interval.1s" = "Every 1s";
+"menu.interval.2s" = "Every 2s";
+"menu.interval.3s" = "Every 3s";
+"menu.interval.5s" = "Every 5s";
+"menu.perCore" = "Show per-core load";
+"menu.launchAtLogin" = "Launch at Login";
+"menu.language" = "Language";
+"language.system" = "Follow System";
+
+/* Menu bar readouts */
+"menubar.cpuTemp" = "CPU Temp";
+"menubar.gpuTemp" = "GPU Temp";
+"menubar.cpuLoad" = "CPU Usage";
+"menubar.gpuLoad" = "GPU Usage";
+"menubar.memory" = "Memory Usage";
+"menubar.net" = "Network Rate";
+
+/* Cards */
+"metric.temperature" = "Temp";
+"metric.fan" = "Fan";
+"metric.power" = "Power";
+"metric.peak" = "Peak";
+"metric.average" = "Average";
+"metric.vram" = "VRAM";
+"metric.sharedMemory" = "Shared Memory";
+"cpu.busiestCore" = "Busiest Core";
+"legend.usage" = "Usage %@";
+"legend.temperature" = "Temp %@";
+"memory.title" = "Memory";
+"memory.used" = "Used";
+"memory.total" = "Total";
+"memory.compressed" = "Compressed";
+"memory.ratio" = "Ratio";
+"memory.legend.app" = "App";
+"memory.legend.wired" = "Wired";
+"memory.legend.compressed" = "Compressed";
+"memory.legend.cached" = "Cached";
+"network.titleWithInterface" = "Network %@";
+
+/* Temperature channels (sysdump and future detail UI) */
+"temp.cpu.package" = "CPU Package";
+"temp.cpu.core" = "CPU Core";
+"temp.cpu.hotspot" = "CPU Hotspot";
+"temp.cpu.aux" = "CPU Aux";
+"temp.gpu.core" = "GPU Core";
+"temp.gpu.proximity" = "GPU Proximity";
+"temp.gpu.vram" = "GPU VRAM";
+"temp.gpu.heatpipe" = "GPU Heatpipe";
+"temp.ambient" = "Ambient";
+"temp.northbridge" = "Northbridge";
+"temp.southbridge" = "Southbridge";
+"temp.memory" = "Memory";
+"temp.battery" = "Battery";
+"temp.wireless" = "Wireless";
+"temp.core" = "Core %ld";
+"temp.cpu.channel" = "CPU %@";
+"temp.gpu.channel" = "GPU %@";
+"temp.drive" = "Drive %@";
+"temp.memory.channel" = "Memory %@";
+"temp.powerStage" = "Power Stage";
+"temp.driveBay" = "Drive Bay";

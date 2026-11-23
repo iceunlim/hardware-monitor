@@ -84,7 +84,7 @@ public final class FanReader {
 
     private func name(for index: Int) -> String {
         if let labeled = smc.read("F\(index)ID")?.text { return labeled }
-        return "风扇 \(index + 1)"
+        return String(format: String(localized: "fan.numbered", defaultValue: "Fan %ld"), index + 1)
     }
 
     private func readSuperIO() -> [FanSample]? {
@@ -139,12 +139,14 @@ public final class FanReader {
 
     private static func label(for key: String) -> String {
         switch key {
-        case "CPUFAN": return "CPU 风扇"
-        case "SYSFAN": return "机箱风扇"
+        case "CPUFAN": return String(localized: "fan.cpu", defaultValue: "CPU Fan")
+        case "SYSFAN": return String(localized: "fan.system", defaultValue: "System Fan")
         default:
-            if key.contains("PUMP") { return "水泵" }
+            if key.contains("PUMP") {
+                return String(localized: "fan.pump", defaultValue: "Pump")
+            }
             if key.hasPrefix("AUXFAN"), let number = Int(key.dropFirst(6)) {
-                return "辅助风扇 \(number + 1)"
+                return String(format: String(localized: "fan.aux", defaultValue: "Aux Fan %ld"), number + 1)
             }
             return key
         }

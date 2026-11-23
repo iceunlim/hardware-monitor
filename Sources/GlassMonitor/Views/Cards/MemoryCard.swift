@@ -9,7 +9,7 @@ struct MemoryCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            CardHeader(title: "内存", systemImage: "memorychip", tint: Accent.memory)
+            CardHeader(title: L10n.t("memory.title"), systemImage: "memorychip", tint: Accent.memory)
 
             HStack(alignment: .center, spacing: 10) {
                 UsageRing(percent: memory.pressurePercent, color: Accent.memory,
@@ -17,9 +17,10 @@ struct MemoryCard: View {
                     .frame(width: 56, height: 56)
 
                 VStack(alignment: .leading, spacing: 3) {
-                    MetricRow(label: "已用", value: ByteFormat.string(memory.usedBytes))
-                    MetricRow(label: "总量", value: ByteFormat.string(memory.totalBytes))
-                    MetricRow(label: "压缩", value: compressionText)
+                    MetricRow(label: L10n.t("memory.used"), value: ByteFormat.string(memory.usedBytes))
+                    MetricRow(label: L10n.t("memory.total"), value: ByteFormat.string(memory.totalBytes))
+                    MetricRow(label: L10n.t("memory.compressed"), value: ByteFormat.string(memory.compressedBytes))
+                    MetricRow(label: L10n.t("memory.ratio"), value: compressionRatioText)
                 }
                 Spacer(minLength: 0)
             }
@@ -34,10 +35,10 @@ struct MemoryCard: View {
                 .frame(height: 6)
 
                 HStack(spacing: 8) {
-                    Legend(color: Color(red: 0.98, green: 0.76, blue: 0.44), text: "应用")
-                    Legend(color: Color(red: 0.94, green: 0.56, blue: 0.42), text: "联动")
-                    Legend(color: Color(red: 0.78, green: 0.44, blue: 0.72), text: "已压缩")
-                    Legend(color: Color(red: 0.55, green: 0.72, blue: 0.55), text: "缓存")
+                    Legend(color: Color(red: 0.98, green: 0.76, blue: 0.44), text: L10n.t("memory.legend.app"))
+                    Legend(color: Color(red: 0.94, green: 0.56, blue: 0.42), text: L10n.t("memory.legend.wired"))
+                    Legend(color: Color(red: 0.78, green: 0.44, blue: 0.72), text: L10n.t("memory.legend.compressed"))
+                    Legend(color: Color(red: 0.55, green: 0.72, blue: 0.55), text: L10n.t("memory.legend.cached"))
                 }
                 .font(.mono(9))
                 .foregroundStyle(.secondary)
@@ -50,11 +51,9 @@ struct MemoryCard: View {
         .glassCard(Accent.memory)
     }
 
-    private var compressionText: String {
-        guard let ratio = memory.compressionRatio, ratio > 1.01 else {
-            return ByteFormat.string(memory.compressedBytes)
-        }
-        return String(format: "%.1f× · ", ratio) + ByteFormat.string(memory.compressedBytes)
+    private var compressionRatioText: String {
+        guard let ratio = memory.compressionRatio, ratio > 1.01 else { return "—" }
+        return String(format: "%.1f×", ratio)
     }
 }
 

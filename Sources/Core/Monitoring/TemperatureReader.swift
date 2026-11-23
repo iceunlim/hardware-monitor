@@ -90,46 +90,46 @@ public final class TemperatureReader {
         // sensor, so they share a label and collapse in `read()`.
         let canonical = key.uppercased()
         switch canonical {
-        case "TC0P": return ("CPU 封装", .cpu, 0)
-        case "TC0D", "TC0E", "TC0F", "TC0H": return ("CPU 核心", .cpu, 1)
-        case "TCXC": return ("CPU 热点", .cpu, 1)
-        case "TCAD", "TC0A": return ("CPU 辅助", .cpu, 3)
-        case "TG0D", "TGDD", "TG0C": return ("GPU 核心", .gpu, 0)
-        case "TG0P": return ("GPU 近端", .gpu, 1)
-        case "TG0M", "TG0R", "TG0V": return ("GPU 显存", .gpu, 1)
-        case "TG0H": return ("GPU 热管", .gpu, 3)
-        case "TA2P", "TAMB", "TA0P": return ("环境温度", .board, 0)
-        case "TN0P", "TN0D": return ("北桥", .board, 0)
-        case "TS0D", "TS0P": return ("南桥", .board, 0)
+        case "TC0P": return (String(localized: "temp.cpu.package", defaultValue: "CPU Package"), .cpu, 0)
+        case "TC0D", "TC0E", "TC0F", "TC0H": return (String(localized: "temp.cpu.core", defaultValue: "CPU Core"), .cpu, 1)
+        case "TCXC": return (String(localized: "temp.cpu.hotspot", defaultValue: "CPU Hotspot"), .cpu, 1)
+        case "TCAD", "TC0A": return (String(localized: "temp.cpu.aux", defaultValue: "CPU Aux"), .cpu, 3)
+        case "TG0D", "TGDD", "TG0C": return (String(localized: "temp.gpu.core", defaultValue: "GPU Core"), .gpu, 0)
+        case "TG0P": return (String(localized: "temp.gpu.proximity", defaultValue: "GPU Proximity"), .gpu, 1)
+        case "TG0M", "TG0R", "TG0V": return (String(localized: "temp.gpu.vram", defaultValue: "GPU VRAM"), .gpu, 1)
+        case "TG0H": return (String(localized: "temp.gpu.heatpipe", defaultValue: "GPU Heatpipe"), .gpu, 3)
+        case "TA2P", "TAMB", "TA0P": return (String(localized: "temp.ambient", defaultValue: "Ambient"), .board, 0)
+        case "TN0P", "TN0D": return (String(localized: "temp.northbridge", defaultValue: "Northbridge"), .board, 0)
+        case "TS0D", "TS0P": return (String(localized: "temp.southbridge", defaultValue: "Southbridge"), .board, 0)
         case "TPSP", "TP0P", "TCSP": return ("PCH", .board, 2)
-        case "TM0P", "TM0S": return ("内存", .memory, 0)
-        case "TB0T", "TB0S": return ("电池", .board, 3)
-        case "TW0P": return ("无线模块", .board, 3)
+        case "TM0P", "TM0S": return (String(localized: "temp.memory", defaultValue: "Memory"), .memory, 0)
+        case "TB0T", "TB0S": return (String(localized: "temp.battery", defaultValue: "Battery"), .board, 3)
+        case "TW0P": return (String(localized: "temp.wireless", defaultValue: "Wireless"), .board, 3)
         default: break
         }
 
         // `TC0C`…`TC8C` are per-core channels on Intel desktop SMCs.
         if canonical.count == 4, canonical.hasPrefix("TC"), canonical.hasSuffix("C"),
            let core = Int(canonical.dropFirst(2).dropLast()) {
-            return ("核心 \(core + 1)", .cpu, 2)
+            return (String(format: String(localized: "temp.core", defaultValue: "Core %ld"), core + 1), .cpu, 2)
         }
 
         guard canonical.count >= 2 else { return (key, .other, 4) }
         let domain = canonical[canonical.index(after: canonical.startIndex)]
         let suffix = canonical.dropFirst(2)
         switch domain {
-        case "C": return ("CPU \(suffix)", .cpu, 2)
-        case "G": return ("GPU \(suffix)", .gpu, 2)
-        case "H": return ("硬盘 \(suffix)", .drive, 0)
-        case "M": return ("内存 \(suffix)", .memory, 0)
-        case "N": return ("北桥", .board, 2)
-        case "S": return ("南桥", .board, 2)
+        case "C": return (String(format: String(localized: "temp.cpu.channel", defaultValue: "CPU %@"), String(suffix)), .cpu, 2)
+        case "G": return (String(format: String(localized: "temp.gpu.channel", defaultValue: "GPU %@"), String(suffix)), .gpu, 2)
+        case "H": return (String(format: String(localized: "temp.drive", defaultValue: "Drive %@"), String(suffix)), .drive, 0)
+        case "M": return (String(format: String(localized: "temp.memory.channel", defaultValue: "Memory %@"), String(suffix)), .memory, 0)
+        case "N": return (String(localized: "temp.northbridge", defaultValue: "Northbridge"), .board, 2)
+        case "S": return (String(localized: "temp.southbridge", defaultValue: "Southbridge"), .board, 2)
         case "P": return ("PCH", .board, 3)
-        case "A": return ("环境温度", .board, 2)
-        case "V": return ("供电模块", .board, 3)
-        case "B": return ("电池", .board, 3)
-        case "W": return ("无线模块", .board, 3)
-        case "Y": return ("硬盘笼", .board, 3)
+        case "A": return (String(localized: "temp.ambient", defaultValue: "Ambient"), .board, 2)
+        case "V": return (String(localized: "temp.powerStage", defaultValue: "Power Stage"), .board, 3)
+        case "B": return (String(localized: "temp.battery", defaultValue: "Battery"), .board, 3)
+        case "W": return (String(localized: "temp.wireless", defaultValue: "Wireless"), .board, 3)
+        case "Y": return (String(localized: "temp.driveBay", defaultValue: "Drive Bay"), .board, 3)
         default: return (key, .other, 4)
         }
     }

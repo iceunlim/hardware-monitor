@@ -8,7 +8,7 @@ struct NetworkCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            CardHeader(title: "网络 \(snapshot.activeInterface ?? "")",
+            CardHeader(title: L10n.format("network.titleWithInterface", snapshot.activeInterface ?? ""),
                        systemImage: "network", tint: Accent.network)
 
             HStack(alignment: .top, spacing: 8) {

@@ -24,8 +24,14 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 	<key>CFBundleIconFile</key><string>AppIcon</string>
 	<key>CFBundleIdentifier</key><string>app.glassmonitor.panel</string>
 	<key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
-	<key>CFBundleName</key><string>玻璃监控</string>
-	<key>CFBundleDisplayName</key><string>玻璃监控</string>
+	<key>CFBundleName</key><string>GlassMonitor</string>
+	<key>CFBundleDisplayName</key><string>GlassMonitor</string>
+	<key>CFBundleDevelopmentRegion</key><string>en</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>zh-Hans</string>
+	</array>
 	<key>CFBundlePackageType</key><string>APPL</string>
 	<key>CFBundleShortVersionString</key><string>1.1.1</string>
 	<key>CFBundleVersion</key><string>3</string>
@@ -38,6 +44,13 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 </dict>
 </plist>
 PLIST
+
+# Localized resources use the standard .lproj layout. Bundle.main reads this
+# directory directly, so the app needs no SwiftPM resource bundle.
+for lproj in Resources/*.lproj; do
+  [[ -d "$lproj" ]] || continue
+  cp -R "$lproj" "$APP/Contents/Resources/"
+done
 
 if [[ -f Resources/AppIcon.png ]]; then
   ICONDIR="$(mktemp -d)"

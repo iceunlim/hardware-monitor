@@ -157,10 +157,10 @@ public struct TemperatureSample: Identifiable {
     public enum Group: String, CaseIterable {
         case cpu = "CPU"
         case gpu = "GPU"
-        case board = "主板"
-        case memory = "内存"
-        case drive = "硬盘"
-        case other = "其他"
+        case board = "Board"
+        case memory = "Memory"
+        case drive = "Drive"
+        case other = "Other"
     }
 }
 

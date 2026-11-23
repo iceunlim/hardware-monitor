@@ -28,12 +28,12 @@ public struct DeviceInfo {
         bootDate = Self.readBootDate()
     }
 
-    /// 系统版本号本体，例如 `26.7.3`；`osVersion` 还带着构建号。
+    /// 系统版本号本体，例如 `26.7.3`。`osVersion` 是本地化过的展示字符串
+    /// （中文系统会变成“版本 26.7.3（版号 …）”），所以这里用结构化版本号，
+    /// 不解析本地化文本。
     public var shortOSVersion: String {
-        osVersion
-            .replacingOccurrences(of: "Version ", with: "")
-            .components(separatedBy: " (")
-            .first ?? osVersion
+        let version = ProcessInfo.processInfo.operatingSystemVersion
+        return "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)"
     }
 
     /// 自启动到现在经过的时间（含睡眠）。

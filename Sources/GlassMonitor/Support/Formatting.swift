@@ -30,14 +30,14 @@ enum Num {
 
     /// 开机时长，按中文习惯保留最大两个单位。
     static func uptime(_ seconds: TimeInterval?) -> String {
-        guard let seconds, seconds >= 60 else { return "刚刚启动" }
+        guard let seconds, seconds >= 60 else { return L10n.t("header.uptime.justStarted") }
         let total = Int(seconds)
         let days = total / 86_400
         let hours = (total % 86_400) / 3_600
         let minutes = (total % 3_600) / 60
-        if days > 0 { return "已运行 \(days) 天 \(hours) 小时" }
-        if hours > 0 { return "已运行 \(hours) 小时 \(minutes) 分" }
-        return "已运行 \(minutes) 分钟"
+        if days > 0 { return L10n.format("header.uptime.daysHours", days, hours) }
+        if hours > 0 { return L10n.format("header.uptime.hoursMinutes", hours, minutes) }
+        return L10n.format("header.uptime.minutes", minutes)
     }
 
     /// Base clock, plus the firmware turbo ceiling when one is declared —

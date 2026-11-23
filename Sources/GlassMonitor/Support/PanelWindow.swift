@@ -47,7 +47,7 @@ final class MenuBarPanel: NSPanel {
         // activation-based hiding would only fight that behavior.
         hidesOnDeactivate = false
         isReleasedWhenClosed = false
-        title = "玻璃监控"
+        title = AppInfo.displayName
     }
 
     override var canBecomeKey: Bool { true }

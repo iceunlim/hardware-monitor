@@ -1,0 +1,90 @@
+/* 应用 */
+"menu.quit" = "退出%@";
+
+/* 顶部信息条 */
+"header.uptime.justStarted" = "刚刚启动";
+"header.uptime.daysHours" = "已运行 %1$ld 天 %2$ld 小时";
+"header.uptime.hoursMinutes" = "已运行 %1$ld 小时 %2$ld 分";
+"header.uptime.minutes" = "已运行 %1$ld 分钟";
+
+/* 风扇 */
+"fan.stopped" = "停转";
+"fan.numbered" = "风扇 %ld";
+"fan.cpu" = "CPU 风扇";
+"fan.system" = "机箱风扇";
+"fan.pump" = "水泵";
+"fan.aux" = "辅助风扇 %ld";
+
+/* 齿轮菜单 */
+"menu.headerFans" = "顶部风扇";
+"menu.headerFans.auto" = "自动（只显示在转的风扇）";
+"menu.noFans" = "未检测到风扇";
+"menu.cpuFan" = "CPU 卡片风扇";
+"menu.cpuFan.auto" = "自动（CPU 风扇 → 水泵）";
+"menu.menuBar" = "菜单栏显示（可多选）";
+"menu.chartWindow" = "曲线窗口";
+"menu.chartWindow.1m" = "最近 1 分钟";
+"menu.chartWindow.3m" = "最近 3 分钟";
+"menu.chartWindow.5m" = "最近 5 分钟";
+"menu.interval" = "刷新间隔";
+"menu.interval.1s" = "每 1 秒";
+"menu.interval.2s" = "每 2 秒";
+"menu.interval.3s" = "每 3 秒";
+"menu.interval.5s" = "每 5 秒";
+"menu.perCore" = "显示每核心负载";
+"menu.launchAtLogin" = "开机自启";
+"menu.language" = "语言";
+"language.system" = "跟随系统";
+
+/* 菜单栏读数 */
+"menubar.cpuTemp" = "CPU 温度";
+"menubar.gpuTemp" = "GPU 温度";
+"menubar.cpuLoad" = "CPU 占用";
+"menubar.gpuLoad" = "GPU 占用";
+"menubar.memory" = "内存占用";
+"menubar.net" = "上下行网速";
+
+/* 卡片 */
+"metric.temperature" = "温度";
+"metric.fan" = "风扇";
+"metric.power" = "功耗";
+"metric.peak" = "峰值";
+"metric.average" = "平均";
+"metric.vram" = "显存";
+"metric.sharedMemory" = "共享内存";
+"cpu.busiestCore" = "最忙核心";
+"legend.usage" = "占用 %@";
+"legend.temperature" = "温度 %@";
+"memory.title" = "内存";
+"memory.used" = "已用";
+"memory.total" = "总量";
+"memory.compressed" = "压缩";
+"memory.ratio" = "压缩率";
+"memory.legend.app" = "应用";
+"memory.legend.wired" = "联动";
+"memory.legend.compressed" = "已压缩";
+"memory.legend.cached" = "缓存";
+"network.titleWithInterface" = "网络 %@";
+
+/* 温度通道（sysdump 与后续详情界面） */
+"temp.cpu.package" = "CPU 封装";
+"temp.cpu.core" = "CPU 核心";
+"temp.cpu.hotspot" = "CPU 热点";
+"temp.cpu.aux" = "CPU 辅助";
+"temp.gpu.core" = "GPU 核心";
+"temp.gpu.proximity" = "GPU 近端";
+"temp.gpu.vram" = "GPU 显存";
+"temp.gpu.heatpipe" = "GPU 热管";
+"temp.ambient" = "环境温度";
+"temp.northbridge" = "北桥";
+"temp.southbridge" = "南桥";
+"temp.memory" = "内存";
+"temp.battery" = "电池";
+"temp.wireless" = "无线模块";
+"temp.core" = "核心 %ld";
+"temp.cpu.channel" = "CPU %@";
+"temp.gpu.channel" = "GPU %@";
+"temp.drive" = "硬盘 %@";
+"temp.memory.channel" = "内存 %@";
+"temp.powerStage" = "供电模块";
+"temp.driveBay" = "硬盘笼";

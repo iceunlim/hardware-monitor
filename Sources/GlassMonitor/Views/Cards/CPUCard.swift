@@ -21,10 +21,10 @@ struct CPUCard: View {
                     .frame(width: 56, height: 56)
 
                 VStack(alignment: .leading, spacing: 3) {
-                    MetricRow(label: "温度", value: Num.celsius(snapshot.cpuTemperature))
-                    MetricRow(label: "最忙核心",
+                    MetricRow(label: L10n.t("metric.temperature"), value: Num.celsius(snapshot.cpuTemperature))
+                    MetricRow(label: L10n.t("cpu.busiestCore"),
                               value: "\(Num.percent(cores.map(\.usage).max() ?? 0))%")
-                    MetricRow(label: "风扇", value: coolerText)
+                    MetricRow(label: L10n.t("metric.fan"), value: coolerText)
                 }
                 Spacer(minLength: 0)
             }
@@ -37,14 +37,15 @@ struct CPUCard: View {
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 8) {
                     MiniLegend(color: Accent.cpu,
-                               text: "占用 \(Num.percent(snapshot.cpu.totalUsage))%")
+                               text: L10n.format("legend.usage", "\(Num.percent(snapshot.cpu.totalUsage))%"))
                     MiniLegend(color: Accent.thermal,
-                               text: "温度 \(Num.degrees(snapshot.cpuTemperature))")
+                               text: L10n.format("legend.temperature", Num.degrees(snapshot.cpuTemperature)))
                     Spacer(minLength: 4)
                     Text(Num.frequencyRange(base: snapshot.cpu.frequencyGHz, ceiling: snapshot.cpu.turboGHz))
                         .font(.mono(9))
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                 }
                 DualSparkline(usage: history, temperature: tempHistory, usageColor: Accent.cpu)
                     .frame(height: 30)
@@ -57,7 +58,7 @@ struct CPUCard: View {
     private var coolerText: String {
         guard let coolerFan else { return "—" }
         let rpm = coolerFan.currentRPM ?? 0
-        return rpm > 0 ? "\(Int(rpm.rounded())) RPM" : "停转"
+        return rpm > 0 ? "\(Int(rpm.rounded())) RPM" : L10n.t("fan.stopped")
     }
 }
 

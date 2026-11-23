@@ -121,23 +121,32 @@ struct PanelBody: View {
 
     private func fanMenuTitle(_ fan: FanSample) -> String {
         let rpm = fan.currentRPM ?? 0
-        let value = rpm > 0 ? "\(Int(rpm.rounded())) RPM" : "停转"
+        let value = rpm > 0 ? "\(Int(rpm.rounded())) RPM" : L10n.t("fan.stopped")
         return "\(fan.name) · \(fan.channel) · \(value)"
     }
 
     @ViewBuilder private var menuContent: some View {
-        Section("顶部风扇") {
-            Toggle("自动（只显示在转的风扇）", isOn: autoFansBinding)
+        Section(L10n.t("menu.language")) {
+            Picker(L10n.t("menu.language"), selection: languageBinding) {
+                Text(L10n.t("language.system")).tag(AppLanguage.system)
+                Text("简体中文").tag(AppLanguage.chinese)
+                Text("English").tag(AppLanguage.english)
+            }
+            .pickerStyle(.inline)
+        }
+
+        Section(L10n.t("menu.headerFans")) {
+            Toggle(L10n.t("menu.headerFans.auto"), isOn: autoFansBinding)
             ForEach(snapshot.fans, id: \.channel) { fan in
                 Toggle(fanMenuTitle(fan), isOn: fanBinding(fan))
                     .disabled(settings.headerFansAuto)
             }
-            if snapshot.fans.isEmpty { Text("未检测到风扇") }
+            if snapshot.fans.isEmpty { Text(L10n.t("menu.noFans")) }
         }
 
-        Section("CPU 卡片风扇") {
-            Picker("CPU 卡片风扇", selection: $settings.cpuFanChannel) {
-                Text("自动（CPU 风扇 → 水泵）").tag(Optional<String>.none)
+        Section(L10n.t("menu.cpuFan")) {
+            Picker(L10n.t("menu.cpuFan"), selection: $settings.cpuFanChannel) {
+                Text(L10n.t("menu.cpuFan.auto")).tag(Optional<String>.none)
                 ForEach(snapshot.fans, id: \.channel) { fan in
                     Text(fanMenuTitle(fan)).tag(Optional(fan.channel))
                 }
@@ -145,7 +154,7 @@ struct PanelBody: View {
             .pickerStyle(.inline)
         }
 
-        Section("菜单栏显示（可多选）") {
+        Section(L10n.t("menu.menuBar")) {
             ForEach(MenuBarItem.allCases) { item in
                 Toggle(item.title, isOn: Binding(
                     get: { settings.menuBarItems.contains(item) },
@@ -156,37 +165,41 @@ struct PanelBody: View {
             }
         }
 
-        Picker("曲线窗口", selection: $settings.curveMinutes) {
-            Text("最近 1 分钟").tag(1.0)
-            Text("最近 3 分钟").tag(3.0)
-            Text("最近 5 分钟").tag(5.0)
+        Picker(L10n.t("menu.chartWindow"), selection: $settings.curveMinutes) {
+            Text(L10n.t("menu.chartWindow.1m")).tag(1.0)
+            Text(L10n.t("menu.chartWindow.3m")).tag(3.0)
+            Text(L10n.t("menu.chartWindow.5m")).tag(5.0)
         }
         .pickerStyle(.inline)
 
-        Picker("刷新间隔", selection: $settings.interval) {
-            Text("每 1 秒").tag(1.0)
-            Text("每 2 秒").tag(2.0)
-            Text("每 3 秒").tag(3.0)
-            Text("每 5 秒").tag(5.0)
+        Picker(L10n.t("menu.interval"), selection: $settings.interval) {
+            Text(L10n.t("menu.interval.1s")).tag(1.0)
+            Text(L10n.t("menu.interval.2s")).tag(2.0)
+            Text(L10n.t("menu.interval.3s")).tag(3.0)
+            Text(L10n.t("menu.interval.5s")).tag(5.0)
         }
         .pickerStyle(.inline)
 
-        Toggle("显示每核心负载", isOn: $settings.showsPerCore)
+        Toggle(L10n.t("menu.perCore"), isOn: $settings.showsPerCore)
 
-        Toggle("开机自启", isOn: Binding(
+        Toggle(L10n.t("menu.launchAtLogin"), isOn: Binding(
             get: { settings.launchAtLogin },
             set: { settings.setLaunchAtLogin($0) }
         ))
 
         Divider()
 
-        Button("退出玻璃监控") { NSApplication.shared.terminate(nil) }
+        Button(L10n.format("menu.quit", AppInfo.displayName)) { NSApplication.shared.terminate(nil) }
     }
 
     /// One card per GPU, not per accelerator: when no accelerator answered, the
 /// fallback identity is still shown as the only card.
     private var displayedGPUs: [GPUSnapshot] {
         snapshot.gpus.isEmpty ? [snapshot.gpu] : snapshot.gpus
+    }
+
+    private var languageBinding: Binding<AppLanguage> {
+        Binding(get: { settings.language }, set: { settings.setLanguage($0) })
     }
 
     /// Every strip chart shows the same recent window, chosen in the header menu.
@@ -314,6 +327,6 @@ private struct FanChip: View {
 
     private var value: String {
         guard let rpm = fan.currentRPM else { return "—" }
-        return rpm > 0 ? "\(Int(rpm.rounded())) RPM" : "停转"
+        return rpm > 0 ? "\(Int(rpm.rounded())) RPM" : L10n.t("fan.stopped")
     }
 }

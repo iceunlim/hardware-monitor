@@ -24,19 +24,19 @@ struct GPUCard: View {
 
                 VStack(alignment: .leading, spacing: 3) {
                     if !gpu.isIntegrated || gpu.temperatureC != nil {
-                        MetricRow(label: "温度", value: Num.celsius(gpu.temperatureC))
+                        MetricRow(label: L10n.t("metric.temperature"), value: Num.celsius(gpu.temperatureC))
                     }
                     if showsPower {
-                        MetricRow(label: "功耗", value: Num.watts(gpu.powerW))
+                        MetricRow(label: L10n.t("metric.power"), value: Num.watts(gpu.powerW))
                     }
                     if !gpu.isIntegrated {
-                        MetricRow(label: "风扇", value: fanText)
+                        MetricRow(label: L10n.t("metric.fan"), value: fanText)
                     }
                     // 核显没有温度/功耗/风扇通道，改用当前曲线窗口的峰值/平均
                     // 占用填充，避免整张卡只剩一个“—”。
                     if gpu.isIntegrated {
-                        MetricRow(label: "峰值", value: "\(Num.percent(usagePeak))%")
-                        MetricRow(label: "平均", value: "\(Num.percent(usageAverage))%")
+                        MetricRow(label: L10n.t("metric.peak"), value: "\(Num.percent(usagePeak))%")
+                        MetricRow(label: L10n.t("metric.average"), value: "\(Num.percent(usageAverage))%")
                     }
                 }
                 Spacer(minLength: 0)
@@ -46,7 +46,7 @@ struct GPUCard: View {
                 if let memory = memoryUsage {
                     VStack(alignment: .leading, spacing: 3) {
                         HStack(spacing: 6) {
-                            Text("显存").font(.mono(11)).foregroundStyle(.secondary)
+                            Text(L10n.t("metric.vram")).font(.mono(11)).foregroundStyle(.secondary)
                             Spacer(minLength: 4)
                             Text(memory.text).font(.mono(11, .medium))
                         }
@@ -57,7 +57,7 @@ struct GPUCard: View {
                 // 核显用共享内存：放在独显“显存”的位置，填补卡片下半部分的空白。
                 if gpu.isIntegrated, let shared = gpu.sharedMemoryBytes {
                     HStack(spacing: 6) {
-                        Text("共享内存").font(.mono(11)).foregroundStyle(.secondary)
+                        Text(L10n.t("metric.sharedMemory")).font(.mono(11)).foregroundStyle(.secondary)
                         Spacer(minLength: 4)
                         Text(ByteFormat.string(shared)).font(.mono(11, .medium))
                     }
@@ -66,10 +66,10 @@ struct GPUCard: View {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 10) {
                         MiniLegend(color: Accent.gpu,
-                                   text: "占用 \(Num.percent(gpu.utilization))%")
+                                   text: L10n.format("legend.usage", "\(Num.percent(gpu.utilization))%"))
                         if gpu.temperatureC != nil {
                             MiniLegend(color: Accent.thermal,
-                                       text: "温度 \(Num.degrees(gpu.temperatureC))")
+                                       text: L10n.format("legend.temperature", Num.degrees(gpu.temperatureC)))
                         }
                         Spacer(minLength: 6)
                         if let clock = gpu.coreClockMHz, clock > 0 {
@@ -124,7 +124,7 @@ struct GPUCard: View {
 
     private var fanText: String {
         guard let rpm = gpu.fanRPM else { return "—" }
-        return rpm > 0 ? "\(Int(rpm.rounded())) RPM" : "停转"
+        return rpm > 0 ? "\(Int(rpm.rounded())) RPM" : L10n.t("fan.stopped")
     }
 
     /// 核显没有独立风扇，功耗也通常不发布；只在驱动确实给出数值时占用一行，

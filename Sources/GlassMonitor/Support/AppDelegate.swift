@@ -89,7 +89,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         guard !groups.isEmpty else {
             let configuration = NSImage.SymbolConfiguration(pointSize: 13, weight: .medium)
-            button.image = NSImage(systemSymbolName: "gauge.medium", accessibilityDescription: "玻璃监控")?
+            button.image = NSImage(systemSymbolName: "gauge.medium", accessibilityDescription: AppInfo.displayName)?
                 .withSymbolConfiguration(configuration)
             button.image?.isTemplate = true
             return
@@ -180,7 +180,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             menu.addItem(entry)
         }
         menu.addItem(.separator())
-        let quit = NSMenuItem(title: "退出玻璃监控", action: #selector(quit), keyEquivalent: "q")
+        let quit = NSMenuItem(title: L10n.format("menu.quit", AppInfo.displayName), action: #selector(quit), keyEquivalent: "q")
         quit.target = self
         menu.addItem(quit)
         if let button = statusItem.button {

@@ -22,7 +22,12 @@ enum Panel {
     static let corner: CGFloat = 22
     static let spacing: CGFloat = 14
     static let padding: CGFloat = 14
-    static let cardWidth: CGFloat = 226
+    /// English labels are wider than the two-character Chinese ones. 240 pt
+    /// keeps "Compressed" and its value on one line; the height stays fixed so
+    /// data changes never make the grid jump.
+    static var cardWidth: CGFloat {
+        Bundle.main.preferredLocalizations.first?.hasPrefix("en") == true ? 240 : 226
+    }
     /// 四张卡统一尺寸。高度按内容最高的一张（独显卡片约 189pt）留出余量后固定，
     /// 数据变化、切换每核心负载或增减指标都不会让某张卡变高、网格抖动。
     static let cardHeight: CGFloat = 192
@@ -65,9 +70,13 @@ struct MetricRow: View {
     var body: some View {
         HStack(spacing: 6) {
             Text(label).font(.mono(11)).foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
             Spacer(minLength: 4)
             Text(value).font(.mono(11, .medium))
                 .foregroundStyle(.primary.opacity(0.92))
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
         }
     }
 }

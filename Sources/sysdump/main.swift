@@ -88,7 +88,7 @@ for fan in fanSamples {
 var fanSnapshot = SystemSnapshot()
 fanSnapshot.fans = fanSamples
 if let cooler = fanSnapshot.coolerFan {
-    print("  CPU 卡片显示: \(cooler.name) [\(cooler.channel)] \(optional(cooler.currentRPM, f0)) RPM")
+    print("  CPU card fan: \(cooler.name) [\(cooler.channel)] \(optional(cooler.currentRPM, f0)) RPM")
 }
 
 let temps = temperatures.read()

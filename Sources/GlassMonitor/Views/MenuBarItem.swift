@@ -39,12 +39,12 @@ enum MenuBarItem: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .cpuTemp: "CPU 温度"
-        case .gpuTemp: "GPU 温度"
-        case .cpuLoad: "CPU 占用"
-        case .gpuLoad: "GPU 占用"
-        case .memory: "内存占用"
-        case .net: "上下行网速"
+        case .cpuTemp: L10n.t("menubar.cpuTemp")
+        case .gpuTemp: L10n.t("menubar.gpuTemp")
+        case .cpuLoad: L10n.t("menubar.cpuLoad")
+        case .gpuLoad: L10n.t("menubar.gpuLoad")
+        case .memory: L10n.t("menubar.memory")
+        case .net: L10n.t("menubar.net")
         }
     }
 
