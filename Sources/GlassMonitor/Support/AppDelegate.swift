@@ -5,19 +5,17 @@ import ServiceManagement
 import Core
 
 /// Menu bar presence built on NSStatusItem so the readout refreshes on every
-/// sample (SwiftUI's MenuBarExtra label does not), with an NSPopover hosting the
-/// Liquid Glass panel. Left click toggles the panel, right click offers the
-/// display-combination menu directly on the icon.
+/// sample (SwiftUI's MenuBarExtra label does not), with a borderless NSPanel
+/// hosting the Liquid Glass panel. Left click toggles the panel, right click
+/// offers the display-combination menu directly on the icon.
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let monitor = HardwareMonitor()
     let settings = AppSettings()
 
     private var statusItem: NSStatusItem!
-    private let popover = NSPopover()
+    private var panelController: PanelController!
     private var cancellables: Set<AnyCancellable> = []
-
-    private var panelWidth: CGFloat { Panel.cardWidth * 2 + Panel.spacing * 3 }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         if CommandLine.arguments.contains("--selftest-loginitem") {
@@ -35,18 +33,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             button.imageHugsTitle = true
         }
 
-        popover.behavior = .transient
-        popover.animates = true
-        let maxHeight = (NSScreen.main?.visibleFrame.height ?? 900) - 24
-        let host = NSHostingController(rootView: RootView(maxHeight: maxHeight, onHeight: { [weak self] height in
-            guard let self else { return }
-            self.popover.contentSize = NSSize(width: self.panelWidth, height: height)
-        })
-        .environmentObject(monitor)
-        .environmentObject(settings)
-        .frame(width: panelWidth))
-        popover.contentViewController = host
-        popover.contentSize = NSSize(width: panelWidth, height: 640)
+        panelController = PanelController(statusItem: statusItem, monitor: monitor, settings: settings)
 
         monitor.$snapshot
             .receive(on: DispatchQueue.main)
@@ -56,7 +43,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.refreshLabel()
-                self?.reanchorPopover()
+                self?.panelController.reanchor()
             }
             .store(in: &cancellables)
         settings.$selectedGPU
@@ -71,10 +58,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         refreshLabel()
         monitor.start(interval: settings.interval)
 
-        if CommandLine.arguments.contains("--selfpopover") {
+        if CommandLine.arguments.contains("--selfpanel") || CommandLine.arguments.contains("--selfpopover") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
-                guard let self, let button = self.statusItem.button else { return }
-                self.popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+                self?.panelController.show()
             }
         }
     }
@@ -173,24 +159,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.terminate(nil)
     }
 
-    /// Adding or removing a readout changes the item's width; re-anchor so the
-    /// popover arrow keeps pointing at the glyph instead of stale coordinates.
-    private func reanchorPopover() {
-        guard popover.isShown, let button = statusItem.button else { return }
-        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-    }
-
+    /// Left click toggles the panel; right click dismisses it and drops the
+    /// display-combination menu right under the icon.
     @objc private func handleClick(_ sender: Any?) {
         if NSApp.currentEvent?.type == .rightMouseUp {
+            panelController.hide()
             showModeMenu()
             return
         }
-        guard let button = statusItem.button else { return }
-        if popover.isShown {
-            popover.performClose(nil)
-        } else {
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-        }
+        panelController.toggle()
     }
 
     private func showModeMenu() {
