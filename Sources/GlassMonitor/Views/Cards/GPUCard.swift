@@ -122,9 +122,13 @@ struct GPUCard: View {
         }
     }
 
+    /// `Fan Speed(RPM)` 是否可用取决于驱动的 ASIC 支持：Navi（X6000）能给出非零
+    /// 转速，Polaris/Baffin（X4000）通常只发布 `Fan Speed(%)` 占空比，RPM 为 0。
+    /// 0 在这里是“没有转速计读数”，不是“停转”，所以有占空比时显示占空比。
     private var fanText: String {
-        guard let rpm = gpu.fanRPM else { return "—" }
-        return rpm > 0 ? "\(Int(rpm.rounded())) RPM" : L10n.t("fan.stopped")
+        if let rpm = gpu.fanRPM, rpm > 0 { return "\(Int(rpm.rounded())) RPM" }
+        if let percent = gpu.fanPercent { return "\(Int(percent.rounded()))%" }
+        return "—"
     }
 
     /// 核显没有独立风扇，功耗也通常不发布；只在驱动确实给出数值时占用一行，

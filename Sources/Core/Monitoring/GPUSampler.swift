@@ -72,8 +72,9 @@ public final class GPUSampler {
             snapshot.powerW = number(statistics["Total Power(W)"])
             snapshot.coreClockMHz = number(statistics["Core Clock(MHz)"])
             snapshot.memoryClockMHz = number(statistics["Memory Clock(MHz)"])
-            // >= 0: the keys stay published at zero-RPM idle, and their presence
-            // is what proves the fan is populated.
+            // 两个键都由加速器驱动发布，但 RPM 只在驱动真的接了转速计时才非零：
+            // Navi/X6000 能给出非零值，Polaris/Baffin/X4000 常见为 0。0 代表
+            // “没上报”，不能据此判断风扇停转，因此保留 0 而不丢弃（负值才丢弃）。
             snapshot.fanPercent = number(statistics["Fan Speed(%)"]).flatMap { $0 >= 0 ? $0 : nil }
             snapshot.fanRPM = number(statistics["Fan Speed(RPM)"]).flatMap { $0 >= 0 ? $0 : nil }
 
