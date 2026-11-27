@@ -50,7 +50,7 @@ public final class HardwareMonitor: ObservableObject {
         }
 
         let source = DispatchSource.makeTimerSource(queue: queue)
-        source.schedule(deadline: .now() + interval, repeating: interval)
+        source.schedule(deadline: .now() + self.interval, repeating: self.interval)
         source.setEventHandler { [weak self] in self?.sample() }
         timer = source
         source.resume()

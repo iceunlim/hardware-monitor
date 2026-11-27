@@ -12,10 +12,10 @@ struct NetworkCard: View {
                        systemImage: "network", tint: Accent.network)
 
             HStack(alignment: .top, spacing: 8) {
-                direction(bytes: snapshot.downloadBps, session: snapshot.sessionInBytes,
+                direction(bitsPerSecond: snapshot.downloadBps, session: snapshot.sessionInBytes,
                           arrow: "arrow.down.left", color: Accent.network, trailing: false)
                 Spacer(minLength: 0)
-                direction(bytes: snapshot.uploadBps, session: snapshot.sessionOutBytes,
+                direction(bitsPerSecond: snapshot.uploadBps, session: snapshot.sessionOutBytes,
                           arrow: "arrow.up.right", color: Accent.thermal, trailing: true)
             }
 
@@ -28,9 +28,9 @@ struct NetworkCard: View {
     /// Fixed-width value and unit columns: traffic can swing from 0 to gigabits
     /// without the card changing shape by a single point. Widths are sized for
     /// the widest glyph run (`999.9` / `Gbps` / `MB`) plus slack, never less.
-    private func direction(bytes: Double, session: Double,
+    private func direction(bitsPerSecond: Double, session: Double,
                            arrow: String, color: Color, trailing: Bool) -> some View {
-        let rate = Num.fixedRate(bytes)
+        let rate = Num.fixedRate(bitsPerSecond)
         let total = Num.fixedBytes(session)
         return VStack(alignment: trailing ? .trailing : .leading, spacing: 2) {
             HStack(spacing: 2) {

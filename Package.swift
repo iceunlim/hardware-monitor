@@ -8,6 +8,7 @@ let package = Package(
         .target(name: "Core"),
         .executableTarget(name: "GlassMonitor", dependencies: ["Core"]),
         .executableTarget(name: "sysdump", dependencies: ["Core"]),
+        .testTarget(name: "CoreTests", dependencies: ["Core"]),
     ],
     swiftLanguageModes: [.v5]
 )
