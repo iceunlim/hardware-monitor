@@ -78,7 +78,9 @@ public struct MemorySnapshot {
 
 public struct NetworkInterfaceSample {
     public var name: String
+    /// Download throughput in bits per second (bit/s).
     public var downloadBps: Double
+    /// Upload throughput in bits per second (bit/s).
     public var uploadBps: Double
     /// Bytes moved since the app started, summed from wrap-corrected deltas.
     public var sessionInBytes: Double
@@ -97,7 +99,9 @@ public struct NetworkInterfaceSample {
 }
 
 public struct NetworkSnapshot {
+    /// Aggregate download throughput across physical interfaces, in bits per second (bit/s).
     public var downloadBps: Double = 0
+    /// Aggregate upload throughput across physical interfaces, in bits per second (bit/s).
     public var uploadBps: Double = 0
     public var sessionInBytes: Double = 0
     public var sessionOutBytes: Double = 0

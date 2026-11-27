@@ -82,8 +82,8 @@ enum MenuBarItem: String, CaseIterable, Identifiable {
     /// Bit/s at 1000-based units from the same `Num.bitRate` ladder as the
     /// card, but with a one-letter unit and no extra padding — a MacBook menu
     /// bar cannot spare ten characters per direction.
-    private static func rate(_ bytesPerSecond: Double) -> String {
-        let rate = Num.bitRate(bytesPerSecond)
+    private static func rate(_ bitsPerSecond: Double) -> String {
+        let rate = Num.bitRate(bitsPerSecond)
         let body = rate.value >= 9.95
             ? String(format: "%3.0f", rate.value)
             : String(format: "%3.1f", rate.value)

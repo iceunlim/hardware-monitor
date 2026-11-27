@@ -61,8 +61,8 @@ enum Num {
 
     /// Bit/s in 1000-based units, shared by the card (full unit) and the menu
     /// bar (single-letter unit) so both always derive from the same ladder.
-    static func bitRate(_ bytesPerSecond: Double) -> (value: Double, unit: String) {
-        let bits = max(0, bytesPerSecond) * 8
+    static func bitRate(_ bitsPerSecond: Double) -> (value: Double, unit: String) {
+        let bits = max(0, bitsPerSecond)
         let ladder: [(scale: Double, unit: String)] = [(1e9, "Gbps"), (1e6, "Mbps"), (1e3, "Kbps")]
         var index = ladder.count - 1
         for (candidate, entry) in ladder.enumerated() where bits >= entry.scale {
@@ -80,8 +80,8 @@ enum Num {
 
     /// Fixed-shape bit rate: five characters of value plus a four-letter unit,
     /// used by the network card where there is room for `Mbps`.
-    static func fixedRate(_ bytesPerSecond: Double) -> (value: String, unit: String) {
-        let rate = bitRate(bytesPerSecond)
+    static func fixedRate(_ bitsPerSecond: Double) -> (value: String, unit: String) {
+        let rate = bitRate(bitsPerSecond)
         return (String(format: "%5.1f", rate.value), rate.unit)
     }
 
